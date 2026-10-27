@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('customer.dashboard');
+    return view('home');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
