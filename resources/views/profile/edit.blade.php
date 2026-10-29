@@ -14,46 +14,76 @@
     <!-- Container Utama Split Screen (Full Width) -->
     <div class="flex flex-col lg:flex-row min-h-screen">
 
-        <!-- 1. BAGIAN KIRI: BANNER GAMBAR & BRANDING -->
-        <div class="w-full lg:w-1/2 h-64 lg:h-auto relative bg-cover bg-center p-6 lg:p-12 flex flex-col justify-between shrink-0 lg:sticky lg:top-0 lg:max-h-screen"
+        <!-- 1. BAGIAN KIRI: BANNER GAMBAR, BRANDING & MENU NAVIGASI AKUN -->
+        <div class="w-full lg:w-1/2 h-auto relative bg-cover bg-center p-6 lg:p-12 flex flex-col justify-between shrink-0 lg:sticky lg:top-0 lg:max-h-screen"
             style="background-image: url('{{ asset('images/login.jpg') }}');">
 
-            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="absolute inset-0 bg-black/40"></div>
 
-            <!-- Logo Top Left -->
-            <div class="relative z-10">
+            <!-- Header / Logo Top Left -->
+            <div class="relative z-10 flex items-center justify-between">
                 <a href="{{ url('/') }}"
                     class="text-xl lg:text-2xl font-serif font-bold text-white tracking-widest uppercase hover:opacity-80 transition">
                     ASYART.MERCH
                 </a>
+                <a href="{{ url('/') }}"
+                    class="text-xs text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded backdrop-blur-sm transition">
+                    ← Back to Shop
+                </a>
             </div>
 
-            <!-- Teks Bottom Left -->
-            <div class="relative z-10 text-white max-w-lg space-y-2 lg:space-y-4 my-auto lg:my-0">
-                <h2 class="text-2xl sm:text-3xl lg:text-5xl font-serif italic leading-tight">
-                    Account Settings
-                </h2>
-                <p class="hidden sm:block text-xs lg:text-sm text-gray-200 opacity-90 leading-relaxed">
-                    Update your personal details, manage your password, sign out from your session, or control your
-                    account preferences.
-                </p>
+            <!-- Teks & Menu Navigasi Akun di Tengah/Bawah Banner -->
+            <div class="relative z-10 text-white max-w-lg space-y-6 my-auto lg:my-12">
+                <div class="space-y-2">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-serif italic leading-tight">
+                        Account Settings
+                    </h2>
+                    <p class="text-xs lg:text-sm text-gray-200 opacity-90 leading-relaxed">
+                        Update your personal details, manage your password, check your orders, or control your
+                        preferences.
+                    </p>
+                </div>
+
+                <!-- Menu Navigasi Akun (Addresses sudah dihubungkan ke rute baru) -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 space-y-2 text-xs">
+                    <a href="{{ route('profile.edit') }}"
+                        class="block font-semibold text-white bg-white/20 px-3 py-2 rounded transition">
+                        ✓ Account details
+                    </a>
+                    <a href="{{ route('profile.orders') }}"
+                        class="block text-gray-200 hover:text-white hover:bg-white/10 px-3 py-2 rounded transition">
+                        Orders
+                    </a>
+                    <a href="{{ route('profile.addresses') }}"
+                        class="block text-gray-200 hover:text-white hover:bg-white/10 px-3 py-2 rounded transition">
+                        Addresses
+                    </a>
+                    <div class="pt-2 border-t border-white/20">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full text-left text-red-300 hover:text-red-200 px-3 py-2 rounded transition">
+                                Sign out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer kecil di banner -->
+            <div class="relative z-10 text-[10px] text-gray-300">
+                &copy; 2026 ASYART.MERCH. All rights reserved.
             </div>
         </div>
 
-        <!-- 2. BAGIAN KANAN: FORM PROFILE SETTINGS -->
+        <!-- 2. BAGIAN KANAN: FORM PROFILE SETTINGS LENGKAP -->
         <div class="w-full lg:w-1/2 flex flex-col justify-between p-6 md:p-12 bg-white overflow-y-auto">
-            <div class="w-full max-w-md mx-auto space-y-8">
+            <div class="w-full max-w-lg mx-auto space-y-8">
 
-                <!-- Header & Button Kembali ke Toko -->
-                <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-                    <div>
-                        <h3 class="text-2xl font-serif font-medium">My Profile</h3>
-                        <p class="text-xs text-gray-500">Manage your account information</p>
-                    </div>
-                    <a href="{{ url('/') }}"
-                        class="text-xs font-medium border border-black px-3 py-1.5 rounded hover:bg-black hover:text-white active:scale-95 transition">
-                        Back to Shop
-                    </a>
+                <!-- Header Form -->
+                <div class="pb-4 border-b border-gray-100">
+                    <h3 class="text-2xl font-serif font-medium">My Profile</h3>
+                    <p class="text-xs text-gray-500">Manage your account information and preferences</p>
                 </div>
 
                 <!-- Session Status Alert -->
@@ -76,22 +106,39 @@
                         @csrf
                         @method('patch')
 
-                        <!-- Name -->
-                        <div class="space-y-1">
-                            <label for="name" class="block text-xs text-gray-600 font-medium">Name</label>
-                            <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}"
-                                required autofocus autocomplete="name"
-                                class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
-                            <x-input-error :messages="$errors->get('name')" class="mt-1" />
+                        <!-- First & Last Name Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label for="first_name" class="block text-xs text-gray-600 font-medium">First
+                                    name</label>
+                                <input id="first_name" type="text" name="first_name"
+                                    value="{{ old('first_name', $user->first_name ?? '') }}" required autofocus
+                                    class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="last_name" class="block text-xs text-gray-600 font-medium">Last name</label>
+                                <input id="last_name" type="text" name="last_name"
+                                    value="{{ old('last_name', $user->last_name ?? '') }}" required
+                                    class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            </div>
                         </div>
 
                         <!-- Email -->
                         <div class="space-y-1">
                             <label for="email" class="block text-xs text-gray-600 font-medium">Email</label>
-                            <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}"
-                                required autocomplete="username"
+                            <input id="email" type="email" name="email"
+                                value="{{ old('email', $user->email) }}" required autocomplete="username"
                                 class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
                             <x-input-error :messages="$errors->get('email')" class="mt-1" />
+                        </div>
+
+                        <!-- Phone (Optional) -->
+                        <div class="space-y-1">
+                            <label for="phone" class="block text-xs text-gray-600 font-medium">Phone
+                                (optional)</label>
+                            <input id="phone" type="text" name="phone"
+                                value="{{ old('phone', $user->phone ?? '+62 812 3456 7890') }}"
+                                class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
                         </div>
 
                         <button type="submit"
@@ -151,27 +198,28 @@
 
                 <div class="border-t border-gray-100"></div>
 
-                <!-- Bagian 3. ACCOUNT SESSION -->
+                <!-- SECTION 3: PREFERENCES -->
                 <div class="space-y-3">
-                    <h3 class="text-sm font-semibold text-gray-900">3. ACCOUNT SESSION</h3>
-                    <p class="text-xs text-gray-500">Done managing your profile? You can log out from your active
-                        account session here.</p>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                            class="inline-block bg-red-600 text-white text-xs font-medium px-4 py-2 rounded hover:bg-red-700 transition">
-                            Log Out
-                        </button>
-                    </form>
+                    <h4 class="text-xs font-semibold font-serif text-gray-900 uppercase tracking-wider">3. Preferences
+                    </h4>
+                    <div class="space-y-2.5 text-xs">
+                        <label class="flex items-center gap-3 cursor-pointer select-none">
+                            <input type="checkbox" checked class="w-4 h-4 accent-black rounded border-gray-300">
+                            <span class="text-gray-700">Email me about new arrivals and private sales</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer select-none">
+                            <input type="checkbox" class="w-4 h-4 accent-black rounded border-gray-300">
+                            <span class="text-gray-700">Send me order updates by SMS</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="border-t border-gray-100"></div>
 
                 <!-- SECTION 4: DELETE ACCOUNT -->
                 <div class="space-y-4 pb-8">
-                    <h4 class="text-xs font-semibold font-serif text-red-600 uppercase tracking-wider">4. Delete Account
-                    </h4>
+                    <h4 class="text-xs font-semibold font-serif text-red-600 uppercase tracking-wider">4. Delete
+                        Account</h4>
                     <p class="text-xs text-gray-500">
                         Once your account is deleted, all of its resources and data will be permanently deleted.
                     </p>

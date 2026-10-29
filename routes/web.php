@@ -51,11 +51,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('customer.dashboard');
 });
 
-// --- RUTE PROFILE USER ---
+// --- RUTE PROFILE USER, ORDERS, & ADDRESSES ---
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rute halaman riwayat pesanan (Orders)
+    Route::get('/profile/orders', function () {
+        return view('orders');
+    })->name('profile.orders');
+
+    // Rute halaman daftar alamat (Addresses)
+    Route::get('/profile/addresses', function () {
+        return view('addresses');
+    })->name('profile.addresses');
 });
 
 // --- RUTE LOGOUT MANUAL ---
