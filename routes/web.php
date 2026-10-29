@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApparelController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,6 +13,20 @@ Route::get('/', [ApparelController::class, 'index'])->name('home');
 Route::get('/search', [ApparelController::class, 'search'])->name('search.page');
 Route::get('/bag', [ApparelController::class, 'cart'])->name('cart.page');
 Route::get('/product/{id}', [ApparelController::class, 'show'])->name('product.detail');
+
+// --- RUTE CHECKOUT & PAYMENT ---
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::post('/checkout/process', [CheckoutController::class, 'store'])->name('checkout.process');
+
+Route::get('/payment', function () {
+    return view('payment');
+})->name('payment.page');
+Route::get('/payment/expired', function () {
+    return view('payment-expired');
+})->name('payment.expired');
+Route::get('/payment/success', function () {
+    return view('payment-success');
+})->name('payment.success');
 
 // --- RUTE DASHBOARD & AUTH (LARAVEL BREEZE) ---
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -25,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         abort_unless(auth()->user()->role === 'admin', 403);
         return view('admin.dashboard');
     })->name('admin.dashboard');
+
+    // RUTE ADMIN KELOLA PESANAN MASUK
+    Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
 
     Route::get('/customer/dashboard', function () {
         abort_unless(auth()->user()->role === 'customer', 403);

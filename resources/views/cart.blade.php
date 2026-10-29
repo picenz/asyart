@@ -26,12 +26,11 @@
 
             <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                 <h1 class="text-xl font-serif font-medium">Your Bag</h1>
-                <!-- ID INI YANG BIKIN ANGKA DI ATAS DINAMIS NGAMBIL JUMLAH ITEM -->
                 <span id="bag-item-count" class="text-xs text-gray-400">0 items</span>
             </div>
 
             <!-- KONTEN DAFTAR BELANJA / EMPTY STATE -->
-            <div id="cart-content" class="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+            <div id="cart-content" class="space-y-4 max-h-[450px] overflow-y-auto pr-1">
                 <!-- Dirender via JavaScript -->
             </div>
 
@@ -68,7 +67,6 @@
             const subtotalEl = document.getElementById('cart-subtotal');
             const itemCountEl = document.getElementById('bag-item-count');
 
-            // MENGGUNAKAN cart.length AGAR MENGHITUNG JUMLAH BARIS/JENIS PRODUK DI KERANJANG
             let totalJenisProduk = cart.length;
 
             if (itemCountEl) {
@@ -97,33 +95,60 @@
             summaryBox.classList.remove('hidden');
             let subtotal = 0;
 
+            const colors = ['Black', 'White', 'Navy', 'Maroon'];
+            const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
             container.innerHTML = cart.map((item, index) => {
                 let hargaSatuan = parseInt(item.harga.replace(/[^0-9]/g, ''));
                 let totalItemHarga = hargaSatuan * item.qty;
                 subtotal += totalItemHarga;
 
+                let colorOptions = colors.map(c =>
+                    `<option value="${c}" ${item.warna === c ? 'selected' : ''}>${c}</option>`).join('');
+                let sizeOptions = sizes.map(s =>
+                    `<option value="${s}" ${item.ukuran === s ? 'selected' : ''}>${s}</option>`).join('');
+
                 return `
-                    <div class="flex items-center justify-between gap-4 p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition bg-gray-50/50">
-                        <div class="flex items-center gap-3">
-                            <img src="${item.gambar}" class="w-14 h-14 object-cover rounded bg-gray-100 border border-gray-200">
-                            <div class="space-y-0.5">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition bg-gray-50/50">
+                        <div class="flex items-start sm:items-center gap-3 w-full sm:w-auto">
+                            <img src="${item.gambar}" class="w-16 h-16 object-cover rounded bg-gray-100 border border-gray-200 flex-shrink-0">
+                            <div class="space-y-1 w-full">
                                 <h4 class="text-xs font-semibold text-gray-900">${item.nama}</h4>
-                                <p class="text-[10px] text-gray-400">Colour: ${item.warna} | Size: ${item.ukuran}</p>
+                                
+                                <!-- Dropdown Warna & Ukuran Responsif -->
+                                <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
+                                    <div class="flex items-center gap-1">
+                                        <span>Color:</span>
+                                        <select onchange="updateVariant(${index}, 'warna', this.value)" class="border border-gray-200 rounded px-1.5 py-0.5 bg-white text-gray-700 font-medium focus:outline-none focus:border-black">
+                                            ${colorOptions}
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span>Size:</span>
+                                        <select onchange="updateVariant(${index}, 'ukuran', this.value)" class="border border-gray-200 rounded px-1.5 py-0.5 bg-white text-gray-700 font-medium focus:outline-none focus:border-black">
+                                            ${sizeOptions}
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <p class="text-xs font-medium text-gray-800">${item.harga}</p>
                             </div>
                         </div>
                         
-                        <div class="text-right space-y-1.5 flex flex-col items-end">
+                        <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 gap-2">
                             <span class="text-xs font-bold text-gray-900">Rp${totalItemHarga.toLocaleString('id-ID')}</span>
                             
-                            <!-- Kontrol Kuantitas Plus / Minus -->
-                            <div class="flex items-center border border-gray-200 bg-white rounded text-xs">
-                                <button type="button" onclick="updateQty(${index}, -1)" class="px-2 py-1 text-gray-500 hover:text-black">-</button>
-                                <span class="px-2 py-1 font-medium">${item.qty}</span>
-                                <button type="button" onclick="updateQty(${index}, 1)" class="px-2 py-1 text-gray-500 hover:text-black">+</button>
-                            </div>
+                            <div class="flex items-center gap-3">
+                                <!-- Tombol Remove dipindah ke sebelah kiri -->
+                                <button type="button" onclick="removeItem(${index})" class="text-[10px] text-red-600 hover:underline">Remove</button>
 
-                            <button type="button" onclick="removeItem(${index})" class="text-[10px] text-red-600 hover:underline">Remove</button>
+                                <!-- Kontrol Kuantitas Plus / Minus dipindah ke sebelah kanan -->
+                                <div class="flex items-center border border-gray-200 bg-white rounded text-xs">
+                                    <button type="button" onclick="updateQty(${index}, -1)" class="px-2 py-1 text-gray-500 hover:text-black">-</button>
+                                    <span class="px-2 py-1 font-medium">${item.qty}</span>
+                                    <button type="button" onclick="updateQty(${index}, 1)" class="px-2 py-1 text-gray-500 hover:text-black">+</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -149,6 +174,12 @@
             renderCartPage();
         }
 
+        function updateVariant(index, field, value) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart[index][field] = value;
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
         function removeItem(index) {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let namaProduk = cart[index].nama;
@@ -171,11 +202,8 @@
                 return;
             }
 
-            if (confirm('Lanjut proses pembayaran dan checkout sekarang, cuk?')) {
-                alert('Checkout berhasil diproses! Terima kasih sudah berbelanja di ASYART.MERCH.');
-                localStorage.removeItem('cart');
-                renderCartPage();
-            }
+            // Langsung arahkan ke halaman checkout
+            window.location.href = "{{ route('checkout') }}";
         @endguest
         }
     </script>
