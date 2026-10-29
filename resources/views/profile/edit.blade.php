@@ -151,19 +151,17 @@
 
                 <div class="border-t border-gray-100"></div>
 
-                <!-- SECTION 3: LOGOUT / SIGN OUT -->
+                <!-- Bagian 3. ACCOUNT SESSION -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-semibold font-serif text-gray-900 uppercase tracking-wider">3. Account
-                        Session</h4>
-                    <p class="text-xs text-gray-500">
-                        Done managing your profile? You can log out from your active account session here.
-                    </p>
+                    <h3 class="text-sm font-semibold text-gray-900">3. ACCOUNT SESSION</h3>
+                    <p class="text-xs text-gray-500">Done managing your profile? You can log out from your active
+                        account session here.</p>
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
-                            class="border border-red-600 text-red-600 hover:bg-red-600 hover:text-white text-xs px-5 py-2.5 rounded font-medium active:scale-95 transition duration-200">
-                            Logout / Sign Out
+                            class="inline-block bg-red-600 text-white text-xs font-medium px-4 py-2 rounded hover:bg-red-700 transition">
+                            Log Out
                         </button>
                     </form>
                 </div>
