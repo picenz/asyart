@@ -112,7 +112,7 @@
                     </div>
                     <div class="flex justify-between text-gray-500">
                         <span>Shipping</span>
-                        <span class="font-medium text-gray-900">Free</span>
+                        <span id="expired-shipping" class="font-medium text-gray-900">Rp0</span>
                     </div>
                     <div class="flex justify-between text-gray-500">
                         <span>VAT (11% PPN)</span>
@@ -142,14 +142,21 @@
 
         function renderExpiredSummary() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            // Ambil biaya pengiriman dari localStorage (sesuaikan key-nya jika sebelumnya pakai nama lain, default 20000)
+            let shippingCost = parseInt(localStorage.getItem('shippingCost')) || 20000;
+
             const container = document.getElementById('expired-items-list');
             const subtotalEl = document.getElementById('expired-subtotal');
+            const shippingEl = document.getElementById('expired-shipping');
             const totalEl = document.getElementById('expired-total');
 
             if (!container) return;
 
             if (cart.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>`;
+                if (subtotalEl) subtotalEl.innerText = 'Rp0';
+                if (shippingEl) shippingEl.innerText = 'Rp0';
+                if (totalEl) totalEl.innerText = 'Rp0';
                 return;
             }
 
@@ -174,8 +181,13 @@
                 `;
             }).join('');
 
+            let grandTotal = subtotal + shippingCost;
+
             if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
-            if (totalEl) totalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
+            if (shippingEl) {
+                shippingEl.innerText = shippingCost === 0 ? 'Free' : `Rp${shippingCost.toLocaleString('id-ID')}`;
+            }
+            if (totalEl) totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
         }
     </script>
 

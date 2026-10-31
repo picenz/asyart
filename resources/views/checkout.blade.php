@@ -98,10 +98,12 @@
                 </div>
             @else
                 <!-- 2. TAMPILAN JIKA SUDAH LOGIN (FORM ALAMAT, VALIDASI WAJIB & QRIS) -->
-                <form action="{{ route('checkout.process') }}" method="POST" class="space-y-8">
+                <form action="{{ route('checkout.process') }}" method="POST" class="space-y-8"
+                    onsubmit="prepareCartPayload(event)">
                     @csrf
 
-                    <!-- Kirim nilai ongkir tambahan ke backend pakai hidden input -->
+                    <!-- HIDDEN INPUT UNTUK MENGIRIM DATA KERANJANG & ONGKIR KE BACKEND -->
+                    <input type="hidden" name="cart_data" id="input-cart-data">
                     <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
 
                     <div class="flex items-center gap-2 text-xs text-gray-400">
@@ -120,7 +122,7 @@
                             class="w-full border border-gray-300 rounded px-3 py-2.5 text-xs bg-white focus:outline-none focus:border-black">
                     </div>
 
-                    <!-- Delivery Address (Wajib & Opsional) -->
+                    <!-- Delivery Address -->
                     <div class="space-y-4">
                         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Delivery</h2>
                         <div class="space-y-3">
@@ -139,7 +141,6 @@
                             <input type="text" name="address" placeholder="Address (Street name, house number)" required
                                 class="w-full border border-gray-300 rounded px-3 py-2.5 text-xs bg-white focus:outline-none focus:border-black">
 
-                            <!-- BAGIAN INI OPSIONAL (TANPA REQUIRED) -->
                             <input type="text" name="apartment" placeholder="Apartment, suite, etc. (Optional)"
                                 class="w-full border border-gray-300 rounded px-3 py-2.5 text-xs bg-white focus:outline-none focus:border-black">
 
@@ -194,7 +195,6 @@
                         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Payment</h2>
                         <p class="text-[11px] text-gray-400">All transactions are secure and encrypted.</p>
 
-                        <!-- Kotak Utama Payment -->
                         <div class="border border-black rounded-lg bg-white p-5 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
@@ -226,10 +226,10 @@
                         </div>
                     </div>
 
-                    <!-- Tombol Submit Form (Continue to Payment) -->
+                    <!-- Tombol Submit Form -->
                     <div class="pt-4">
                         <button type="submit"
-                            class="w-full bg-black text-white py-4 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 text-center shadow-md">
+                            class="w-full bg-black text-white py-4 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 text-center shadow-md cursor-pointer">
                             Pay with QRIS — <span id="btn-total-price">Rp0</span>
                         </button>
                     </div>
@@ -295,6 +295,15 @@
             window.location.reload();
         }
 
+        // Fungsi untuk membungkus data keranjang ke hidden input sebelum form dikirim ke BE
+        function prepareCartPayload(event) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            document.getElementById('input-cart-data').value = JSON.stringify(cart);
+
+            // Catatan buat temen BE: setelah order sukses diproses di controller, 
+            // pastikan backend nge-redirect ke route('payment.success')
+        }
+
         function renderCheckoutSummary() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             const container = document.getElementById('checkout-items-list');
@@ -329,19 +338,15 @@
             }).join('');
 
             if (subtotalEl) subtotalEl.innerText = `Rp${currentSubtotal.toLocaleString('id-ID')}`;
-
-            // Hitung total awal dengan ongkir default (0)
             updateTotalDisplay();
         }
 
         function updateShipping(cost, labelText) {
             currentShippingCost = cost;
 
-            // Update teks shipping di summary
             const shippingEl = document.getElementById('summary-shipping');
             if (shippingEl) shippingEl.innerText = labelText;
 
-            // Update nilai hidden input agar terkirim ke backend Laravel
             const hiddenInput = document.getElementById('input-shipping-cost');
             if (hiddenInput) hiddenInput.value = cost;
 

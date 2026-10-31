@@ -31,10 +31,12 @@
                 </svg>
             </div>
             <div class="space-y-1">
-                <p class="text-xs text-gray-400 font-mono tracking-wider">ORDER #RN-10432</p>
-                <h1 id="success-username" class="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-gray-900">
-                    Thank you,
-                    User</h1>
+                <!-- NOMOR ORDER RN DINAMIS DARI BACKEND -->
+                <p class="text-xs text-gray-400 font-mono tracking-wider">ORDER
+                    #{{ session('order_number', 'RN-10432') }}</p>
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-gray-900">
+                    Thank you, {{ session('customer_name', auth()->check() ? auth()->user()->name : 'User') }}
+                </h1>
                 <p class="text-xs text-gray-500">Paid with QRIS. Your receipt is on its way to your email.</p>
             </div>
         </div>
@@ -49,7 +51,7 @@
                         Order summary</h3>
 
                     <div id="success-items-list" class="space-y-4 max-h-[320px] overflow-y-auto pr-1">
-                        <!-- Javascript akan mengisi list produk -->
+                        <!-- Javascript akan mengisi list produk dari localStorage -->
                     </div>
 
                     <div class="border-t border-gray-100 pt-4 space-y-2 text-xs">
@@ -59,8 +61,8 @@
                         </div>
                         <div class="flex justify-between text-gray-500">
                             <span>Shipping</span>
-                            <span class="font-medium text-gray-900">
-                                {{ session('order_summary.shipping_cost', 0) > 0 ? 'Rp ' . number_format(session('order_summary.shipping_cost'), 0, ',', '.') : 'Free' }}
+                            <span class="font-medium text-gray-900" id="success-shipping-label">
+                                {{ session('shipping_cost', 0) > 0 ? 'Rp ' . number_format(session('shipping_cost'), 0, ',', '.') : 'Free' }}
                             </span>
                         </div>
                         <div class="flex justify-between text-gray-500">
@@ -71,35 +73,49 @@
 
                     <div class="border-t border-gray-100 pt-4 flex justify-between items-center">
                         <span class="text-sm font-bold text-gray-900">Total</span>
-                        <span id="success-total" class="text-base font-bold text-gray-900">
-                            Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }}
-                        </span>
+                        <span id="success-total" class="text-base font-bold text-gray-900">Rp0</span>
                     </div>
                 </div>
 
-                <!-- Kolom Kanan: Alamat & Info Pengiriman -->
+                <!-- Kolom Kanan: Alamat & Info Pengiriman Dinamis -->
                 <div
                     class="md:col-span-5 space-y-6 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 text-xs text-gray-600">
+
+                    <!-- ALAMAT PENGIRIMAN -->
                     <div class="space-y-2">
                         <h4 class="font-bold uppercase tracking-wider text-gray-900 text-[11px]">Delivery address</h4>
-                        <p class="font-semibold text-gray-900">Dawa Dzaki</p>
-                        <p class="leading-relaxed">Jl. Koja Raya No. 45<br>Koja, Jakarta Utara 14220<br>Indonesia</p>
+                        <p class="font-semibold text-gray-900">
+                            {{ session('address_data.first_name', 'Dawa') }}
+                            {{ session('address_data.last_name', 'Dzaki') }}
+                        </p>
+                        <p class="leading-relaxed">
+                            {{ session('address_data.address', 'Jl. Koja Raya No. 45') }}
+                            @if (session('address_data.apartment'))
+                                <br>{{ session('address_data.apartment') }}
+                            @endif
+                            <br>{{ session('address_data.city', 'Jakarta Utara') }},
+                            {{ session('address_data.province', 'DKI Jakarta') }}
+                            {{ session('address_data.postal_code', '14220') }}
+                            <br>Indonesia
+                        </p>
                     </div>
 
+                    <!-- METODE PENGIRIMAN -->
                     <div class="space-y-2 pt-2 border-t border-gray-100">
                         <h4 class="font-bold uppercase tracking-wider text-gray-900 text-[11px]">Delivery method</h4>
                         <p>
-                            {{ session('checkout_data.delivery_method', 'Standard delivery') }}<br>
+                            {{ session('delivery_method', 'Standard delivery') }}<br>
                             <span class="text-gray-400">
-                                {{ session('checkout_data.delivery_method') == 'Express delivery' ? '1–2 business days' : '3–5 business days' }}
+                                {{ session('delivery_method') == 'Express delivery' ? '1–2 business days' : '3–5 business days' }}
                             </span>
                         </p>
                     </div>
 
+                    <!-- PEMBAYARAN -->
                     <div class="space-y-2 pt-2 border-t border-gray-100">
                         <h4 class="font-bold uppercase tracking-wider text-gray-900 text-[11px]">Payment</h4>
-                        <p>QRIS · Paid Today<br><span
-                                class="font-semibold text-gray-900">Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }}</span>
+                        <p>QRIS · Paid Today<br>
+                            <span class="font-semibold text-gray-900" id="success-payment-total">Rp0</span>
                         </p>
                     </div>
                 </div>
@@ -126,7 +142,7 @@
         &copy; 2026 ASYART.MERCH. All rights reserved.
     </footer>
 
-    <!-- SCRIPT RENDER DATA & USER -->
+    <!-- SCRIPT RENDER DATA & KALKULASI OTOMATIS -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             renderSuccessSummary();
@@ -136,27 +152,28 @@
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             const container = document.getElementById('success-items-list');
             const subtotalEl = document.getElementById('success-subtotal');
-            const usernameEl = document.getElementById('success-username');
+            const totalEl = document.getElementById('success-total');
+            const paymentTotalEl = document.getElementById('success-payment-total');
 
-            @auth
-            if (usernameEl) usernameEl.innerText = "Thank you, {{ auth()->user()->name }}";
-        @endauth
+            // Ambil ongkir dari backend session (default 0 jika tidak ada)
+            let shippingCost = parseInt("{{ session('shipping_cost', 0) }}") || 0;
 
-        if (!container) return;
+            if (!container) return;
 
-        if (cart.length === 0) {
-            container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Tidak ada produk dalam pesanan.</p>`;
-            return;
-        }
+            if (cart.length === 0) {
+                container.innerHTML =
+                    `<p class="text-xs text-gray-400 text-center py-4">Tidak ada produk dalam pesanan.</p>`;
+                return;
+            }
 
-        let subtotal = 0;
+            let subtotal = 0;
 
-        container.innerHTML = cart.map(item => {
-            let hargaSatuan = parseInt(item.harga.replace(/[^0-9]/g, ''));
-            let totalItemHarga = hargaSatuan * item.qty;
-            subtotal += totalItemHarga;
+            container.innerHTML = cart.map(item => {
+                let hargaSatuan = parseInt(item.harga.replace(/[^0-9]/g, '')) || 0;
+                let totalItemHarga = hargaSatuan * item.qty;
+                subtotal += totalItemHarga;
 
-            return `
+                return `
                     <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
                         <div class="flex items-center gap-3">
                             <img src="${item.gambar}" class="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0">
@@ -168,9 +185,13 @@
                         <span class="font-semibold text-gray-900 flex-shrink-0">Rp${totalItemHarga.toLocaleString('id-ID')}</span>
                     </div>
                 `;
-        }).join('');
+            }).join('');
 
-        if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
+            let grandTotal = subtotal + shippingCost;
+
+            if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
+            if (totalEl) totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
+            if (paymentTotalEl) paymentTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
         }
     </script>
 
