@@ -53,28 +53,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // --- RUTE PROFILE USER, ORDERS, & ADDRESSES ---
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
 
-    // Rute halaman riwayat pesanan (Orders)
-    Route::get('/profile/orders', function () {
-        return view('orders');
-    })->name('profile.orders');
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
 
-    // Rute halaman daftar alamat (Addresses)
-    Route::get('/profile/addresses', function () {
-        return view('addresses');
-    })->name('profile.addresses');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
-// --- RUTE LOGOUT MANUAL ---
-Route::post('/logout', function (Request $request) {
-    Auth::guard('web')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect('/');
-})->middleware('auth')->name('logout');
+Route::get('/admin/dashboard', function () {
+    return view('admin.dashboard');
+})->name('admin.dashboard');
+
+Route::get('/customer/dashboard', function () {
+    return view('customer.dashboard');
+})->name('customer.dashboard');
+
+Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
+    Route::middleware(['auth', 'verified', 'role:customer'])->group(function () {
+        Route::post('/cart', function () {
+            // Nanti dihubungkan ke proses tambah keranjang.
+        })->name('cart.store');
+
+        Route::get('/cart', function () {
+            // Nanti menampilkan keranjang customer.
+        })->name('cart.index');
+
+        Route::get('/checkout', function () {
+            // Nanti dihubungkan ke proses checkout.
+        })->name('checkout');
+    });
+});
+
+// Route::get('/products', [ProductController::class, 'index'])
+//     ->name('products.index');
+
+// Route::get('/products/{slug}', [ProductController::class, 'show'])
+//     ->name('products.show');
+
+// })->name('products.show');
 
 // --- REQUIRE AUTH ROUTES BREEZE ---
 require __DIR__ . '/auth.php';
