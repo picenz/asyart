@@ -63,7 +63,7 @@
                     <span>Subtotal</span>
                     <span id="cart-subtotal">Rp0</span>
                 </div>
-                <button type="button" onclick="checkout()"
+                <button type="button" onclick="validateAndCheckout()"
                     class="w-full bg-black text-white py-3.5 rounded text-xs font-medium hover:bg-gray-800 active:scale-95 transition cursor-pointer">
                     Checkout
                 </button>
@@ -103,8 +103,56 @@
 
     <!-- SCRIPT JAVASCRIPT MASTER SINKRONISASI -->
     <script>
-        // Database Stok Master Lengkap & Presisi Per Produk (Siap Config Backend)
+        // Database Stok Master Lengkap & Presisi Per Produk
         const productStockData = {
+            "Baby Tee Bang Windah": {
+                "Black": {
+                    "XS": 4,
+                    "S": 0,
+                    "M": 5,
+                    "L": 2,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 3,
+                    "S": 5,
+                    "M": 0,
+                    "L": 6,
+                    "XL": 2
+                }
+            },
+            "Short Sleeve Bocil Bang Windah": {
+                "Black": {
+                    "XS": 2,
+                    "S": 8,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 0,
+                    "M": 7,
+                    "L": 3,
+                    "XL": 4
+                }
+            },
+            "Longsleeve Bang Windah": {
+                "Black": {
+                    "XS": 3,
+                    "S": 6,
+                    "M": 0,
+                    "L": 4,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 3,
+                    "XL": 1
+                }
+            },
             "Baby Tee Snoopy": {
                 "Black": {
                     "XS": 5,
@@ -121,52 +169,132 @@
                     "XL": 10
                 }
             },
-            "Baby Tee Bang Windah": {
+            "Baby Tee Radio Head": {
                 "Black": {
-                    "XS": 4,
-                    "S": 10,
+                    "XS": 1,
+                    "S": 0,
+                    "M": 6,
+                    "L": 2,
+                    "XL": 3
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 3,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 1
+                }
+            },
+            "Baby Tee Cake": {
+                "Black": {
+                    "XS": 2,
+                    "S": 5,
+                    "M": 0,
+                    "L": 3,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 3,
+                    "M": 6,
+                    "L": 0,
+                    "XL": 4
+                }
+            },
+            "Baby Tee Blue Star Fish": {
+                "Black": {
+                    "XS": 3,
+                    "S": 0,
                     "M": 5,
                     "L": 2,
                     "XL": 1
                 },
                 "White": {
-                    "XS": 3,
-                    "S": 5,
-                    "M": 8,
-                    "L": 6,
-                    "XL": 2
+                    "XS": 2,
+                    "S": 3,
+                    "M": 0,
+                    "L": 1,
+                    "XL": 5
                 }
             },
-            "Short Sleeve Bocil Bang Windah": {
+            "Short Sleeve Circle Fish": {
                 "Black": {
                     "XS": 2,
-                    "S": 8,
-                    "M": 10,
-                    "L": 5,
-                    "XL": 4
+                    "S": 6,
+                    "M": 0,
+                    "L": 4,
+                    "XL": 2
                 },
                 "White": {
                     "XS": 1,
-                    "S": 4,
+                    "S": 3,
+                    "M": 5,
+                    "L": 0,
+                    "XL": 3
+                }
+            },
+            "Longsleeve Puffer Fish": {
+                "Black": {
+                    "XS": 1,
+                    "S": 0,
                     "M": 7,
                     "L": 3,
                     "XL": 2
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 2,
+                    "XL": 1
                 }
             },
-            "Longsleeve Bang Windah": {
+            "Baby Tee Snoopy & Bang Windah": {
+                "Black": {
+                    "XS": 4,
+                    "S": 8,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 4,
+                    "M": 6,
+                    "L": 0,
+                    "XL": 3
+                }
+            },
+            "Short Sleeve Bocil Sigma": {
                 "Black": {
                     "XS": 3,
-                    "S": 6,
+                    "S": 0,
                     "M": 9,
                     "L": 4,
                     "XL": 2
                 },
                 "White": {
+                    "XS": 1,
+                    "S": 3,
+                    "M": 5,
+                    "L": 0,
+                    "XL": 4
+                }
+            },
+            "Longsleeve Orange Fish": {
+                "Black": {
                     "XS": 2,
                     "S": 5,
-                    "M": 6,
+                    "M": 0,
                     "L": 3,
                     "XL": 1
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 2,
+                    "XL": 3
                 }
             }
         };
@@ -181,14 +309,25 @@
             updateCartCountUI();
         });
 
-        // Auto-correct nama lama (Crop Top -> Baby Tee) di localStorage
+        // SINKRONISASI TOTAL NAMA PRODUK DI LOCALSTORAGE
         function cleanAndSyncCartData() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let updated = false;
 
             cart.forEach(item => {
-                if (item.nama.includes("Crop Top")) {
-                    item.nama = item.nama.replace("Crop Top", "Baby Tee");
+                let nameLower = item.nama.toLowerCase();
+
+                if (nameLower.includes("crop top")) {
+                    item.nama = item.nama.replace(/crop top/gi, "Baby Tee");
+                    updated = true;
+                }
+                if (nameLower.includes("regular tee")) {
+                    item.nama = item.nama.replace(/regular tee/gi, "Short Sleeve");
+                    updated = true;
+                }
+                if (nameLower.includes("bocil bang windah") && !nameLower.includes("baby tee") && !nameLower
+                    .includes("short sleeve")) {
+                    item.nama = "Short Sleeve Bocil Bang Windah";
                     updated = true;
                 }
             });
@@ -198,18 +337,45 @@
             }
         }
 
-        // Fungsi Helper Pencocokan Objek Stok Sesuai Nama Produk
+        // Fungsi Pencocokan Stok Dengan Pengaman Alias Lengkap
         function getProductStockObject(productName) {
-            let cleanName = productName.trim();
-            if (productStockData[cleanName]) return productStockData[cleanName];
+            let cleanName = productName.trim().toLowerCase();
+            if (cleanName.includes("crop top")) {
+                cleanName = cleanName.replace("crop top", "baby tee");
+            }
+            if (cleanName.includes("regular tee")) {
+                cleanName = cleanName.replace("regular tee", "short sleeve");
+            }
 
-            let matchedKey = Object.keys(productStockData).find(key => cleanName.includes(key) || key.includes(cleanName));
-            return matchedKey ? productStockData[matchedKey] : productStockData["Baby Tee Snoopy"];
+            for (let key in productStockData) {
+                if (cleanName === key.toLowerCase() || cleanName.includes(key.toLowerCase()) || key.toLowerCase().includes(
+                        cleanName)) {
+                    return productStockData[key];
+                }
+            }
+            return {
+                "Black": {
+                    "XS": 0,
+                    "S": 0,
+                    "M": 0,
+                    "L": 0,
+                    "XL": 0
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 0,
+                    "M": 0,
+                    "L": 0,
+                    "XL": 0
+                }
+            };
         }
 
         function getProductStock(productName, color, size) {
             let stockObj = getProductStockObject(productName);
-            let colorObj = stockObj[color] || stockObj["Black"] || {};
+            let matchedColorKey = Object.keys(stockObj).find(c => c.toLowerCase() === (color || '').toLowerCase()) ||
+                "Black";
+            let colorObj = stockObj[matchedColorKey] || {};
             return colorObj[size] !== undefined ? colorObj[size] : 0;
         }
 
@@ -250,7 +416,9 @@
                 let hargaAngka = parseInt(item.harga.replace(/[^0-9]/g, '')) || 0;
 
                 let productStockObj = getProductStockObject(item.nama);
-                let colorStock = productStockObj[item.warna] || {};
+                let matchedColorKey = Object.keys(productStockObj).find(c => c.toLowerCase() === (item.warna || '')
+                    .toLowerCase()) || "Black";
+                let colorStock = productStockObj[matchedColorKey] || {};
                 let maxStock = colorStock[item.ukuran] !== undefined ? colorStock[item.ukuran] : 0;
 
                 if (maxStock === 0) {
@@ -275,12 +443,11 @@
                             <div class="space-y-1.5 w-full">
                                 <h3 class="text-xs font-semibold text-gray-900">${item.nama}</h3>
                                 
-                                <!-- DROPDOWN WARNA & UKURAN TERINTEGRASI STOK MERATA & LOCK KOSONG -->
                                 <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
                                     <div class="flex items-center gap-1">
                                         <span>Color:</span>
                                         <select onchange="updateItemVariant(${index}, 'warna', this.value)" class="border border-gray-200 rounded px-1.5 py-0.5 text-xs bg-white font-medium cursor-pointer focus:outline-none focus:border-black">
-                                            ${availableColors.map(c => `<option value="${c}" ${c === item.warna ? 'selected' : ''}>${c}</option>`).join('')}
+                                            ${availableColors.map(c => `<option value="${c}" ${c.toLowerCase() === (item.warna || '').toLowerCase() ? 'selected' : ''}>${c}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div class="flex items-center gap-1">
@@ -289,8 +456,10 @@
                                             ${availableSizes.map(s => {
                                                 let stockCheck = colorStock[s] ?? 0;
                                                 let isOutOfStock = stockCheck === 0;
-                                                let disabledAttr = isOutOfStock ? 'disabled class="text-gray-300 bg-gray-100"' : '';
-                                                return `<option value="${s}" ${s === item.ukuran ? 'selected' : ''} ${disabledAttr}>${s} ${isOutOfStock ? '(Habis)' : ''}</option>`;
+                                                let disabledAttr = isOutOfStock ? 'disabled' : '';
+                                                let styleAttr = isOutOfStock ? 'style="color: #9ca3af; background-color: #f3f4f6; cursor: not-allowed;"' : '';
+                                                let selectedAttr = s === item.ukuran ? 'selected' : '';
+                                                return `<option value="${s}" ${selectedAttr} ${disabledAttr} ${styleAttr}>${s} ${isOutOfStock ? '(Habis)' : ''}</option>`;
                                             }).join('')}
                                         </select>
                                     </div>
@@ -302,7 +471,6 @@
                         </div>
 
                         <div class="flex items-center justify-between w-full sm:w-auto gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                            <!-- Kontrol Qty -->
                             <div class="flex items-center border border-gray-200 rounded text-sm">
                                 <button type="button" onclick="updateQty(${index}, -1)" class="px-2.5 py-1.5 text-gray-500 hover:text-black">-</button>
                                 <span class="px-3 py-1.5 font-medium text-xs">${item.qty}</span>
@@ -322,26 +490,63 @@
             updateCartCountUI();
         }
 
-        // Sinkronisasi Varian & Gambar Presisi Masing-Masing Produk
         function updateItemVariant(index, field, value) {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let item = cart[index];
 
+            if (field === 'ukuran') {
+                let targetStock = getProductStock(item.nama, item.warna, value);
+                if (targetStock === 0) {
+                    alert(`Maaf, ukuran ${value} untuk warna ${item.warna} stoknya kosong (Habis)!`);
+                    renderCart();
+                    return;
+                }
+            }
+
             item[field] = value;
 
             if (field === 'warna') {
-                if (item.nama.includes('Snoopy')) {
+                let cleanName = item.nama.toLowerCase();
+                if (cleanName.includes('snoopy') && cleanName.includes('bang')) {
+                    item.gambar = value === 'Black' ? "{{ asset('images/npcrop-htm.jpg') }}" :
+                        "{{ asset('images/npcrop-pth.jpg') }}";
+                } else if (cleanName.includes('snoopy')) {
                     item.gambar = value === 'Black' ? "{{ asset('images/snpcrop-htm.jpg') }}" :
                         "{{ asset('images/snpcrop-pth.jpg') }}";
-                } else if (item.nama.includes('Baby Tee') || item.nama.includes('Windah') && item.nama.includes('Baby')) {
+                } else if (cleanName.includes('radio head')) {
+                    item.gambar = value === 'Black' ? "{{ asset('images/radiocrop-htm.jpg') }}" :
+                        "{{ asset('images/radiocrop-pth.jpg') }}";
+                } else if (cleanName.includes('cake')) {
+                    item.gambar = value === 'Black' ? "{{ asset('images/cakecrop-htm.jpg') }}" :
+                        "{{ asset('images/cakecrop-pth.jpg') }}";
+                } else if (cleanName.includes('blue star fish') || cleanName.includes('ikan biru')) {
+                    item.gambar = value === 'Black' ? "{{ asset('images/ikanbirucrop-htm.jpg') }}" :
+                        "{{ asset('images/ikanbirucrop-pth.jpg') }}";
+                } else if (cleanName.includes('baby tee') || cleanName.includes('crop')) {
                     item.gambar = value === 'Black' ? "{{ asset('images/windahcrop-htm.jpg') }}" :
                         "{{ asset('images/windahcrop-pth.jpg') }}";
-                } else if (item.nama.includes('Short Sleeve') || item.nama.includes('Regular')) {
-                    item.gambar = value === 'Black' ? "{{ asset('images/windahreg-htm.jpg') }}" :
-                        "{{ asset('images/windahreg-pth.jpg') }}";
-                } else if (item.nama.includes('Longsleeve')) {
-                    item.gambar = value === 'Black' ? "{{ asset('images/windahpnjg-htm.jpg') }}" :
-                        "{{ asset('images/windahpnjg-pth.jpg') }}";
+                } else if (cleanName.includes('short sleeve') || cleanName.includes('regular')) {
+                    if (cleanName.includes('sigma')) {
+                        item.gambar = value === 'Black' ? "{{ asset('images/bclreg-htm.jpg') }}" :
+                            "{{ asset('images/bclreg-pth.jpg') }}";
+                    } else if (cleanName.includes('circle fish') || cleanName.includes('ikan bulat')) {
+                        item.gambar = value === 'Black' ? "{{ asset('images/ikanbulatreg-htm.jpg') }}" :
+                            "{{ asset('images/ikanbulatreg-pth.jpg') }}";
+                    } else {
+                        item.gambar = value === 'Black' ? "{{ asset('images/windahreg-htm.jpg') }}" :
+                            "{{ asset('images/windahreg-pth.jpg') }}";
+                    }
+                } else if (cleanName.includes('longsleeve') || cleanName.includes('long sleeve')) {
+                    if (cleanName.includes('puffer') || cleanName.includes('buntal')) {
+                        item.gambar = value === 'Black' ? "{{ asset('images/ikanbuntalpnjg-htm.jpg') }}" :
+                            "{{ asset('images/ikanbuntalpnjg-pth.jpg') }}";
+                    } else if (cleanName.includes('orange') || cleanName.includes('oren')) {
+                        item.gambar = value === 'Black' ? "{{ asset('images/ikanorenpnjg-htm.jpg') }}" :
+                            "{{ asset('images/ikanorenpnjg-pth.jpg') }}";
+                    } else {
+                        item.gambar = value === 'Black' ? "{{ asset('images/windahpnjg-htm.jpg') }}" :
+                            "{{ asset('images/windahpnjg-pth.jpg') }}";
+                    }
                 }
             }
 
@@ -350,7 +555,9 @@
             if (maxStock === 0) {
                 alert(`Maaf, varian warna ${item.warna} ukuran ${item.ukuran} stoknya kosong!`);
                 let productStockObj = getProductStockObject(item.nama);
-                let colorStock = productStockObj[item.warna] || {};
+                let matchedColorKey = Object.keys(productStockObj).find(c => c.toLowerCase() === (item.warna || '')
+                    .toLowerCase()) || "Black";
+                let colorStock = productStockObj[matchedColorKey] || {};
                 let availableSize = availableSizes.find(s => (colorStock[s] ?? 0) > 0);
                 if (availableSize) {
                     item.ukuran = availableSize;
@@ -385,7 +592,6 @@
             renderCart();
         }
 
-        // Kontrol Modal Konfirmasi Hapus Per Item
         function openDeleteModal(index) {
             itemIndexToDelete = index;
             document.getElementById('delete-modal').classList.remove('hidden');
@@ -406,7 +612,6 @@
             }
         });
 
-        // Kontrol Modal Konfirmasi Kosongkan Seluruh Keranjang (Clear Cart)
         function openClearCartModal() {
             document.getElementById('clear-cart-modal').classList.remove('hidden');
         }
@@ -421,7 +626,6 @@
             renderCart();
         }
 
-        // Update Badge Counter Pojok Kanan Atas
         function updateCartCountUI() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let uniqueItemsCount = cart.length;
@@ -429,8 +633,25 @@
             if (badgeDesktop) badgeDesktop.innerText = uniqueItemsCount;
         }
 
-        function checkout() {
-            // Langsung arahkan ke route checkout yang bener
+        function validateAndCheckout() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            if (cart.length === 0) {
+                alert("Keranjang belanjaan lu kosong!");
+                return;
+            }
+
+            for (let i = 0; i < cart.length; i++) {
+                let item = cart[i];
+                let currentStock = getProductStock(item.nama, item.warna, item.ukuran);
+
+                if (currentStock <= 0 || item.qty > currentStock) {
+                    alert(
+                        `GAGAL CHECKOUT!\n\nProduk "${item.nama}" (Warna: ${item.warna}, Size: ${item.ukuran}) stoknya habis atau jumlah qty melebihi sisa stok (${currentStock} pcs).\n\nHarap hapus atau ubah varian/jumlahnya terlebih dahulu!`);
+                    return;
+                }
+            }
+
             window.location.href = "{{ route('checkout') }}";
         }
     </script>

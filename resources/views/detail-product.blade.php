@@ -211,7 +211,8 @@
                 <!-- KANAN: INFORMASI & AKSI PRODUK -->
                 <div class="space-y-6 text-xs text-gray-800">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-serif font-medium text-gray-900 mb-1">
+                        <h1 id="product-title-heading"
+                            class="text-2xl md:text-3xl font-serif font-medium text-gray-900 mb-1">
                             {{ $product['nama'] }}
                         </h1>
                         <p class="text-gray-400 uppercase tracking-wider text-[10px] mb-2">{{ $product['kategori'] }}
@@ -343,21 +344,199 @@
 
     <!-- SCRIPT JAVASCRIPT MASTER UTAMA -->
     <script>
-        // Data Stok Dummy (Struktur siap konfigurasi Backend Laravel)
+        // Database Stok Master Lengkap & Presisi Per Produk
         const productStockData = {
-            "Black": {
-                "XS": 5,
-                "S": 12,
-                "M": 0,
-                "L": 8,
-                "XL": 3
+            "Baby Tee Bang Windah": {
+                "Black": {
+                    "XS": 4,
+                    "S": 0,
+                    "M": 5,
+                    "L": 2,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 3,
+                    "S": 5,
+                    "M": 0,
+                    "L": 6,
+                    "XL": 2
+                }
             },
-            "White": {
-                "XS": 2,
-                "S": 0,
-                "M": 15,
-                "L": 4,
-                "XL": 10
+            "Short Sleeve Bocil Bang Windah": {
+                "Black": {
+                    "XS": 2,
+                    "S": 8,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 0,
+                    "M": 7,
+                    "L": 3,
+                    "XL": 4
+                }
+            },
+            "Longsleeve Bang Windah": {
+                "Black": {
+                    "XS": 3,
+                    "S": 6,
+                    "M": 0,
+                    "L": 4,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 3,
+                    "XL": 1
+                }
+            },
+            "Baby Tee Snoopy": {
+                "Black": {
+                    "XS": 5,
+                    "S": 12,
+                    "M": 0,
+                    "L": 8,
+                    "XL": 3
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 0,
+                    "M": 15,
+                    "L": 4,
+                    "XL": 10
+                }
+            },
+            "Baby Tee Radio Head": {
+                "Black": {
+                    "XS": 1,
+                    "S": 0,
+                    "M": 6,
+                    "L": 2,
+                    "XL": 3
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 3,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 1
+                }
+            },
+            "Baby Tee Cake": {
+                "Black": {
+                    "XS": 2,
+                    "S": 5,
+                    "M": 0,
+                    "L": 3,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 3,
+                    "M": 6,
+                    "L": 0,
+                    "XL": 4
+                }
+            },
+            "Baby Tee Blue Star Fish": {
+                "Black": {
+                    "XS": 3,
+                    "S": 0,
+                    "M": 5,
+                    "L": 2,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 3,
+                    "M": 0,
+                    "L": 1,
+                    "XL": 5
+                }
+            },
+            "Short Sleeve Circle Fish": {
+                "Black": {
+                    "XS": 2,
+                    "S": 6,
+                    "M": 0,
+                    "L": 4,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 3,
+                    "M": 5,
+                    "L": 0,
+                    "XL": 3
+                }
+            },
+            "Longsleeve Puffer Fish": {
+                "Black": {
+                    "XS": 1,
+                    "S": 0,
+                    "M": 7,
+                    "L": 3,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 2,
+                    "XL": 1
+                }
+            },
+            "Baby Tee Snoopy & Bang Windah": {
+                "Black": {
+                    "XS": 4,
+                    "S": 8,
+                    "M": 0,
+                    "L": 5,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 2,
+                    "S": 4,
+                    "M": 6,
+                    "L": 0,
+                    "XL": 3
+                }
+            },
+            "Short Sleeve Bocil Sigma": {
+                "Black": {
+                    "XS": 3,
+                    "S": 0,
+                    "M": 9,
+                    "L": 4,
+                    "XL": 2
+                },
+                "White": {
+                    "XS": 1,
+                    "S": 3,
+                    "M": 5,
+                    "L": 0,
+                    "XL": 4
+                }
+            },
+            "Longsleeve Orange Fish": {
+                "Black": {
+                    "XS": 2,
+                    "S": 5,
+                    "M": 0,
+                    "L": 3,
+                    "XL": 1
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 2,
+                    "M": 4,
+                    "L": 2,
+                    "XL": 3
+                }
             }
         };
 
@@ -367,8 +546,68 @@
         let maxStock = 0;
         let scrollPosition = 0;
         let recentSearches = ['Long Sleeve', 'Baby Tee', 'Baby Tee Bang Windah'];
+        let productNameCurrent = "{{ $product['nama'] }}";
 
-        // Pool Data Ulasan & Rekomendasi
+        // PENGAMAN JUDUL & STOK DINAMIS (Ubah Regular Tee jadi Short Sleeve otomatis)
+        document.addEventListener('DOMContentLoaded', () => {
+            let headingEl = document.getElementById("product-title-heading");
+            if (headingEl) {
+                let currentText = headingEl.innerText.trim();
+                if (currentText.includes("Regular Tee")) {
+                    currentText = currentText.replace(/Regular Tee/gi, "Short Sleeve");
+                    headingEl.innerText = currentText;
+                    productNameCurrent = currentText; // Update variabel global biar sinkron ke fungsi add to bag
+                }
+            }
+
+            updateCartCountUI();
+            renderSizeOptions();
+            updateStockUI();
+            generateRandomContent();
+            renderRecentSearches();
+            renderSuggestions('');
+
+            const desktopInput = document.getElementById('search-input');
+            const mobileInput = document.getElementById('search-input-mobile');
+
+            if (desktopInput) desktopInput.addEventListener('focus', openSearchOverlay);
+            if (mobileInput) mobileInput.addEventListener('focus', openSearchOverlay);
+        });
+
+        function getProductStockObject(productName) {
+            let cleanName = productName.trim().toLowerCase();
+
+            if (cleanName.includes("crop top")) {
+                cleanName = cleanName.replace("crop top", "baby tee");
+            }
+            if (cleanName.includes("regular tee")) {
+                cleanName = cleanName.replace("regular tee", "short sleeve");
+            }
+
+            for (let key in productStockData) {
+                if (cleanName === key.toLowerCase() || cleanName.includes(key.toLowerCase()) || key.toLowerCase().includes(
+                        cleanName)) {
+                    return productStockData[key];
+                }
+            }
+            return {
+                "Black": {
+                    "XS": 0,
+                    "S": 0,
+                    "M": 0,
+                    "L": 0,
+                    "XL": 0
+                },
+                "White": {
+                    "XS": 0,
+                    "S": 0,
+                    "M": 0,
+                    "L": 0,
+                    "XL": 0
+                }
+            };
+        }
+
         const poolReviews = [{
                 nama: "Rizky Pratama",
                 waktu: "2 days ago",
@@ -438,22 +677,6 @@
             }
         ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            updateCartCountUI();
-            renderSizeOptions();
-            updateStockUI();
-            generateRandomContent();
-            renderRecentSearches();
-            renderSuggestions('');
-
-            const desktopInput = document.getElementById('search-input');
-            const mobileInput = document.getElementById('search-input-mobile');
-
-            if (desktopInput) desktopInput.addEventListener('focus', openSearchOverlay);
-            if (mobileInput) mobileInput.addEventListener('focus', openSearchOverlay);
-        });
-
-        // Fungsi Kunci Total Body Scroll (Fixed Position Trik)
         function lockScroll() {
             if (document.body.style.position === 'fixed') return;
             scrollPosition = window.pageYOffset;
@@ -602,11 +825,14 @@
             window.location.href = "{{ route('search.page') }}?q=" + encodeURIComponent(tagText);
         }
 
-        // Render Size & Stok Berdasarkan Warna Aktif
         function renderSizeOptions() {
             const container = document.getElementById('size-buttons-container');
             const availableSizes = ["XS", "S", "M", "L", "XL"];
-            const colorStock = productStockData[selectedColor] || {};
+
+            let stockObj = getProductStockObject(productNameCurrent);
+            let matchedColorKey = Object.keys(stockObj).find(c => c.toLowerCase() === selectedColor.toLowerCase()) ||
+                "Black";
+            const colorStock = stockObj[matchedColorKey] || {};
 
             container.innerHTML = availableSizes.map(size => {
                 const stock = colorStock[size] ?? 0;
@@ -655,7 +881,10 @@
                 return;
             }
 
-            maxStock = productStockData[selectedColor][selectedSize] || 0;
+            let stockObj = getProductStockObject(productNameCurrent);
+            let matchedColorKey = Object.keys(stockObj).find(c => c.toLowerCase() === selectedColor.toLowerCase()) ||
+                "Black";
+            maxStock = stockObj[matchedColorKey][selectedSize] ?? 0;
 
             if (maxStock > 0) {
                 stockStatusText.innerHTML =
@@ -675,7 +904,6 @@
             }
         }
 
-        // Sinkronisasi Thumbnail & Warna
         function changeImage(imgUrl, colorName, element) {
             document.getElementById('main-product-img').src = imgUrl;
 
@@ -810,7 +1038,7 @@
         function addToBag() {
             if (!selectedSize || maxStock <= 0) return;
 
-            const productName = "{{ $product['nama'] }}";
+            const productName = productNameCurrent; // Menggunakan nama yang sudah disinkronkan jadi Short Sleeve
             const productCat = "{{ $product['kategori'] }}";
             const productPrice = "{{ $product['harga'] }}";
             const productImg = selectedColor === 'Black' ? "{{ asset('images/' . $product['gambar_hitam']) }}" :
@@ -849,7 +1077,7 @@
                 document.body.appendChild(toast);
             }
 
-            const productName = "{{ $product['nama'] }}";
+            const productName = productNameCurrent;
             const productPrice = "{{ $product['harga'] }}";
             const productImg = selectedColor === 'Black' ? "{{ asset('images/' . $product['gambar_hitam']) }}" :
                 "{{ asset('images/' . $product['gambar_putih']) }}";
@@ -882,5 +1110,5 @@
     </script>
 
 </body>
-    
+
 </html>

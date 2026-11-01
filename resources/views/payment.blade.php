@@ -43,7 +43,8 @@
                 <div
                     class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1 rounded text-amber-700 text-xs font-medium">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    Waiting for payment <span class="text-gray-400 font-normal">| Order #RN-10432</span>
+                    Waiting for payment <span class="text-gray-400 font-normal">| Order
+                        #{{ session('order_number', 'RN-10432') }}</span>
                 </div>
                 <h1 class="text-3xl font-serif font-medium">Scan to pay with QRIS</h1>
                 <p class="text-xs text-gray-500">Use any e-wallet or mobile banking app. The amount is filled in
@@ -89,13 +90,15 @@
                     </div>
                 </div>
 
-                <!-- Tombol Aksi QRIS -->
+                <!-- Tombol Aksi QRIS (Diberi form & id agar cart localStorage ikut terkirim) -->
                 <div class="space-y-3 pt-2">
-                    <!-- Tombol Check Payment Status Diarahkan ke Halaman Sukses -->
-                    <a href="{{ route('payment.success') }}"
-                        class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
-                        Check payment status
-                    </a>
+                    <form id="payment-form" action="{{ route('payment.success') }}" method="GET">
+                        <input type="hidden" name="cart_data" id="hidden-cart-data">
+                        <button type="submit"
+                            class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
+                            Check payment status
+                        </button>
+                    </form>
                     <button type="button" onclick="alert('QR code berhasil diunduh!')"
                         class="w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
                         Download QR code
@@ -131,10 +134,6 @@
                         <p class="text-[11px]">Confirm the payment — this page updates automatically.</p>
                     </div>
                 </div>
-                <div class="pt-2">
-                    <a href="#" onclick="alert('Kembali ke metode pembayaran')"
-                        class="text-[11px] text-gray-500 hover:text-black underline">Change payment method</a>
-                </div>
             </div>
 
         </div>
@@ -156,7 +155,7 @@
                     <div class="flex justify-between text-gray-500">
                         <span>Shipping</span>
                         <span id="payment-shipping" class="font-medium text-gray-900">
-                            {{ session('order_summary.shipping_cost', 0) > 0 ? 'Rp ' . number_format(session('order_summary.shipping_cost'), 0, ',', '.') : 'Free' }}
+                            {{ session('shipping_cost', 0) > 0 ? 'Rp' . number_format(session('shipping_cost'), 0, ',', '.') : 'Free' }}
                         </span>
                     </div>
                     <div class="flex justify-between text-gray-500">
@@ -179,11 +178,20 @@
         &copy; 2026 ASYART.MERCH. All rights reserved.
     </footer>
 
-    <!-- SCRIPT RENDER ORDER SUMMARY & TIMER 1 MENIT (15:00 -> 14:00) -->
+    <!-- SCRIPT RENDER ORDER SUMMARY & TIMER 1 MENIT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             renderPaymentSummary();
             startCountdown();
+
+            // Tangkap data cart dari localStorage dan masukkan ke hidden input saat form dikirim
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm) {
+                paymentForm.addEventListener('submit', () => {
+                    let cart = localStorage.getItem('cart') || '[]';
+                    document.getElementById('hidden-cart-data').value = cart;
+                });
+            }
         });
 
         function renderPaymentSummary() {
@@ -221,8 +229,8 @@
                 `;
             }).join('');
 
-            // Ambil ongkir dari backend session (Laravel)
-            let shippingCost = {{ session('order_summary.shipping_cost', 0) }};
+            // Ambil ongkir dari session PHP Laravel
+            let shippingCost = {{ session('shipping_cost', 0) }};
             let grandTotal = subtotal + shippingCost;
 
             if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
@@ -231,14 +239,13 @@
         }
 
         function startCountdown() {
-            let totalSeconds = 60; // Durasi 1 menit (60 detik) dari 15:00 ke 14:00
+            let totalSeconds = 60;
             const display = document.getElementById('countdown-timer');
             const timerBar = document.getElementById('timer-bar');
 
             let interval = setInterval(() => {
                 if (totalSeconds < 0) {
                     clearInterval(interval);
-                    // Langsung redirect ke halaman expired/gagal bayar
                     window.location.href = "{{ route('payment.expired') }}";
                     return;
                 }

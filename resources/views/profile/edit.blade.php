@@ -44,7 +44,7 @@
                     </p>
                 </div>
 
-                <!-- Menu Navigasi Akun (Addresses sudah dihubungkan ke rute baru) -->
+                <!-- Menu Navigasi Akun -->
                 <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 space-y-2 text-xs">
                     <a href="{{ route('profile.edit') }}"
                         class="block font-semibold text-white bg-white/20 px-3 py-2 rounded transition">
@@ -114,12 +114,14 @@
                                 <input id="first_name" type="text" name="first_name"
                                     value="{{ old('first_name', $user->first_name ?? '') }}" required autofocus
                                     class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                                <x-input-error :messages="$errors->get('first_name')" class="mt-1" />
                             </div>
                             <div class="space-y-1">
                                 <label for="last_name" class="block text-xs text-gray-600 font-medium">Last name</label>
                                 <input id="last_name" type="text" name="last_name"
                                     value="{{ old('last_name', $user->last_name ?? '') }}" required
                                     class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                                <x-input-error :messages="$errors->get('last_name')" class="mt-1" />
                             </div>
                         </div>
 
@@ -137,8 +139,9 @@
                             <label for="phone" class="block text-xs text-gray-600 font-medium">Phone
                                 (optional)</label>
                             <input id="phone" type="text" name="phone"
-                                value="{{ old('phone', $user->phone ?? '+62 812 3456 7890') }}"
+                                value="{{ old('phone', $user->phone ?? '') }}"
                                 class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            <x-input-error :messages="$errors->get('phone')" class="mt-1" />
                         </div>
 
                         <button type="submit"
@@ -150,7 +153,7 @@
 
                 <div class="border-t border-gray-100"></div>
 
-                <!-- SECTION 2: UPDATE PASSWORD -->
+                <!-- SECTION 2: UPDATE PASSWORD (DENGAN TOMBOL MATA & POSISI TOMBOL DI KIRI) -->
                 <div class="space-y-4">
                     <h4 class="text-xs font-semibold font-serif text-gray-900 uppercase tracking-wider">2. Update
                         Password</h4>
@@ -163,9 +166,22 @@
                         <div class="space-y-1">
                             <label for="update_password_current_password"
                                 class="block text-xs text-gray-600 font-medium">Current Password</label>
-                            <input id="update_password_current_password" type="password" name="current_password"
-                                autocomplete="current-password"
-                                class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            <div class="relative">
+                                <input id="update_password_current_password" type="password" name="current_password"
+                                    autocomplete="current-password"
+                                    class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm pr-10 focus:outline-none focus:border-black transition">
+                                <button type="button"
+                                    onclick="togglePassword('update_password_current_password', 'icon-current')"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-black">
+                                    <svg id="icon-current" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
                             <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-1" />
                         </div>
 
@@ -173,9 +189,22 @@
                         <div class="space-y-1">
                             <label for="update_password_password" class="block text-xs text-gray-600 font-medium">New
                                 Password</label>
-                            <input id="update_password_password" type="password" name="password"
-                                autocomplete="new-password"
-                                class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            <div class="relative">
+                                <input id="update_password_password" type="password" name="password"
+                                    autocomplete="new-password"
+                                    class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm pr-10 focus:outline-none focus:border-black transition">
+                                <button type="button"
+                                    onclick="togglePassword('update_password_password', 'icon-new')"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-black">
+                                    <svg id="icon-new" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
                             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-1" />
                         </div>
 
@@ -183,16 +212,41 @@
                         <div class="space-y-1">
                             <label for="update_password_password_confirmation"
                                 class="block text-xs text-gray-600 font-medium">Confirm Password</label>
-                            <input id="update_password_password_confirmation" type="password"
-                                name="password_confirmation" autocomplete="new-password"
-                                class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
+                            <div class="relative">
+                                <input id="update_password_password_confirmation" type="password"
+                                    name="password_confirmation" autocomplete="new-password"
+                                    class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm pr-10 focus:outline-none focus:border-black transition">
+                                <button type="button"
+                                    onclick="togglePassword('update_password_password_confirmation', 'icon-confirm')"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-black">
+                                    <svg id="icon-confirm" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
                             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-1" />
                         </div>
 
-                        <button type="submit"
-                            class="bg-black text-white text-xs px-5 py-2.5 rounded font-medium hover:bg-gray-800 active:scale-95 transition">
-                            Update Password
-                        </button>
+                        <!-- Tombol Update di Kiri & Link Forgot Password di Kanan -->
+                        <div class="flex items-center justify-between pt-1">
+                            <button type="submit"
+                                class="bg-black text-white text-xs px-5 py-2.5 rounded font-medium hover:bg-gray-800 active:scale-95 transition">
+                                Update Password
+                            </button>
+
+                            @if (Route::has('password.request'))
+                                <a href="{{ route('password.request') }}"
+                                    class="text-xs text-gray-500 hover:text-black underline transition">
+                                    Forgot your password?
+                                </a>
+                            @else
+                                <div></div>
+                            @endif
+                        </div>
                     </form>
                 </div>
 
@@ -250,6 +304,24 @@
         </div>
 
     </div>
+
+    <!-- SCRIPT TOGGLE IKON MATA PASSWORD -->
+    <script>
+        function togglePassword(fieldId, iconId) {
+            const inputField = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+
+            if (inputField.type === 'password') {
+                inputField.type = 'text';
+                icon.innerHTML =
+                    `<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />`;
+            } else {
+                inputField.type = 'password';
+                icon.innerHTML =
+                    `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+            }
+        }
+    </script>
 
 </body>
 

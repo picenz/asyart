@@ -61,9 +61,7 @@
                         </div>
                         <div class="flex justify-between text-gray-500">
                             <span>Shipping</span>
-                            <span class="font-medium text-gray-900" id="success-shipping-label">
-                                {{ session('shipping_cost', 0) > 0 ? 'Rp ' . number_format(session('shipping_cost'), 0, ',', '.') : 'Free' }}
-                            </span>
+                            <span class="font-medium text-gray-900" id="success-shipping-label">Rp0</span>
                         </div>
                         <div class="flex justify-between text-gray-500">
                             <span>VAT (11% PPN)</span>
@@ -103,11 +101,9 @@
                     <!-- METODE PENGIRIMAN -->
                     <div class="space-y-2 pt-2 border-t border-gray-100">
                         <h4 class="font-bold uppercase tracking-wider text-gray-900 text-[11px]">Delivery method</h4>
-                        <p>
-                            {{ session('delivery_method', 'Standard delivery') }}<br>
-                            <span class="text-gray-400">
-                                {{ session('delivery_method') == 'Express delivery' ? '1–2 business days' : '3–5 business days' }}
-                            </span>
+                        <p id="success-delivery-method-text">
+                            Express delivery<br>
+                            <span class="text-gray-400">1–2 business days</span>
                         </p>
                     </div>
 
@@ -125,15 +121,18 @@
 
         <!-- TOMBOL AKSI BAWAH -->
         <div class="max-w-sm mx-auto space-y-3 pt-2 px-4 sm:px-0">
-            <a href="{{ route('home') }}" onclick="localStorage.removeItem('cart');"
+            <a href="{{ route('home') }}"
+                onclick="localStorage.removeItem('cart'); localStorage.removeItem('checkout_shipping_cost'); localStorage.removeItem('shipping_cost'); localStorage.removeItem('checkout_shipping_method');"
                 class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
                 Continue shopping
             </a>
             <div class="text-center">
-                <a href="#" onclick="alert('Nomor resi pengiriman akan dikirim via email.')"
-                    class="text-xs text-gray-500 hover:text-black underline">Track your order</a>
+                <a href="{{ route('profile.order.detail', \App\Models\Orders::where('user_id', auth()->id())->latest()->first()->id ?? 1) }}"
+                    onclick="localStorage.removeItem('cart'); localStorage.removeItem('checkout_shipping_cost'); localStorage.removeItem('shipping_cost'); localStorage.removeItem('checkout_shipping_method');"
+                    class="text-xs text-gray-500 hover:text-black underline">
+                    Track your order
+                </a>
             </div>
-        </div>
 
     </main>
 
@@ -152,11 +151,10 @@
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             const container = document.getElementById('success-items-list');
             const subtotalEl = document.getElementById('success-subtotal');
+            const shippingLabelEl = document.getElementById('success-shipping-label');
             const totalEl = document.getElementById('success-total');
             const paymentTotalEl = document.getElementById('success-payment-total');
-
-            // Ambil ongkir dari backend session (default 0 jika tidak ada)
-            let shippingCost = parseInt("{{ session('shipping_cost', 0) }}") || 0;
+            const deliveryMethodEl = document.getElementById('success-delivery-method-text');
 
             if (!container) return;
 
@@ -187,9 +185,24 @@
                 `;
             }).join('');
 
+            // Ambil persis dari localStorage checkout atau pastikan default ongkir reguler/express 20rb
+            let shippingCost = parseInt(localStorage.getItem('checkout_shipping_cost')) ||
+                parseInt(localStorage.getItem('shipping_cost')) || 20000;
+
             let grandTotal = subtotal + shippingCost;
 
             if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
+
+            if (shippingLabelEl) {
+                shippingLabelEl.innerText = `Rp${shippingCost.toLocaleString('id-ID')}`;
+            }
+
+            if (deliveryMethodEl) {
+                let savedMethod = localStorage.getItem('checkout_shipping_method') || 'Express delivery';
+                deliveryMethodEl.innerHTML =
+                    `${savedMethod} (Rp${shippingCost.toLocaleString('id-ID')})<br><span class="text-gray-400">1–2 business days</span>`;
+            }
+
             if (totalEl) totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
             if (paymentTotalEl) paymentTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
         }

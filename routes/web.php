@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Orders;
 
 // --- RUTE UTAMA E-COMMERCE (APPAREL) ---
 Route::get('/', [ApparelController::class, 'index'])->name('home');
@@ -14,19 +15,65 @@ Route::get('/search', [ApparelController::class, 'search'])->name('search.page')
 Route::get('/bag', [ApparelController::class, 'cart'])->name('cart.page');
 Route::get('/product/{id}', [ApparelController::class, 'show'])->name('product.detail');
 
-// --- RUTE CHECKOUT & PAYMENT ---
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-Route::post('/checkout/process', [CheckoutController::class, 'store'])->name('checkout.process');
+// --- RUTE CHECKOUT & PAYMENT (Wajib Login / Auth) ---
+Route::middleware(['auth'])->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout/process', [CheckoutController::class, 'store'])->name('checkout.process');
 
-Route::get('/payment', function () {
-    return view('payment');
-})->name('payment.page');
-Route::get('/payment/expired', function () {
-    return view('payment-expired');
-})->name('payment.expired');
-Route::get('/payment/success', function () {
-    return view('payment-success');
-})->name('payment.success');
+    // Rute Payment
+    Route::get('/payment', function () {
+        $shippingCost = (int) session('shipping_cost', 0);
+        $deliveryMethod = session('delivery_method', 'Standard delivery');
+        return view('payment', compact('shippingCost', 'deliveryMethod'));
+    })->name('payment.page');
+
+    Route::get('/payment/expired', function () {
+        return view('payment-expired');
+    })->name('payment.expired');
+
+    // Rute Payment Success & Simpan ke Database
+    Route::any('/payment/success', function (Request $request) {
+        $addressData = session('address_data');
+        if (!$addressData) {
+            return redirect()->route('home');
+        }
+
+        $shippingCost = (int) session('shipping_cost', 0);
+        $deliveryMethod = session('delivery_method', 'Standard delivery');
+
+        // Ambil data keranjang dari input form POST atau fallback ke session
+        $cartDataJson = $request->input('cart_data') ?? session('cart_data', '[]');
+        $cartItems = json_decode($cartDataJson, true);
+
+        $subtotal = 0;
+        foreach ($cartItems as $item) {
+            $harga = (int) preg_replace('/[^0-9]/', '', $item['harga']);
+            $subtotal += $harga * $item['qty'];
+        }
+
+        $totalPrice = $subtotal + $shippingCost;
+        $orderNumber = session('order_number', 'RN-' . rand(10000, 99999));
+
+        Orders::create([
+            'user_id' => auth()->id(),
+            'order_number' => $orderNumber,
+            'status' => 'Processing',
+            'total_price' => $totalPrice,
+            'delivery_method' => $deliveryMethod,
+            'first_name' => $addressData['first_name'],
+            'last_name' => $addressData['last_name'],
+            'email' => $addressData['email'],
+            'phone' => $addressData['phone'],
+            'address' => $addressData['address'],
+            'city' => $addressData['city'],
+            'postal_code' => $addressData['postal_code'],
+            'province' => $addressData['province'],
+            'items_json' => $cartDataJson,
+        ]);
+
+        return view('payment-success');
+    })->name('payment.success');
+});
 
 // --- RUTE DASHBOARD & AUTH (LARAVEL BREEZE) ---
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -42,7 +89,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
-    // RUTE ADMIN KELOLA PESANAN MASUK
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
 
     Route::get('/customer/dashboard', function () {
@@ -57,12 +103,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Rute halaman riwayat pesanan (Orders)
-    Route::get('/profile/orders', function () {
-        return view('orders');
-    })->name('profile.orders');
+    Route::get('/profile/orders', [ProfileController::class, 'orders'])->name('profile.orders');
+    Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])->name('profile.order.detail');
 
-    // Rute halaman daftar alamat (Addresses)
     Route::get('/profile/addresses', function () {
         return view('addresses');
     })->name('profile.addresses');

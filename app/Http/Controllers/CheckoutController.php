@@ -13,41 +13,38 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input: Kolom penting wajib diisi, apartment opsional (nullable)
+        // Validasi input form checkout
         $validatedData = $request->validate([
             'email' => 'required|email',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'address' => 'required|string',
-            'apartment' => 'nullable|string|max:255', // Bersifat opsional
+            'apartment' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'province' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'delivery_method' => 'required|string',
-            'shipping_cost' => 'required|numeric', // Tangkap ongkir dari hidden input
+            'shipping_cost' => 'required|numeric',
         ]);
 
-        // Simulasi subtotal produk (kalau datanya dari database/cart backend, sesuaikan ya)
-        // Di sini kita set dummy subtotal atau bisa disesuaikan sama sistem keranjang lu
-        $subtotal = 85000;
         $shippingCost = (int) $request->shipping_cost;
-        $totalPayment = $subtotal + $shippingCost;
+        $deliveryMethod = $request->delivery_method;
+        $orderNumber = 'RN-' . rand(10000, 99999);
 
-        // Simpan data pesanan sementara ke session biar bisa dibaca di halaman payment
+        // Ambil data keranjang dari request atau JavaScript localStorage (dikirim via input hidden)
+        $cartDataJson = $request->input('cart_data', '[]');
+
+        // Simpan semua data penting ke session sementara (database diisi pas pembayaran sukses)
         session([
-            'checkout_data' => $validatedData,
-            'order_summary' => [
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'total' => $totalPayment
-            ]
+            'order_number' => $orderNumber,
+            'address_data' => $validatedData,
+            'delivery_method' => $deliveryMethod,
+            'shipping_cost' => $shippingCost,
+            'cart_data' => $cartDataJson,
         ]);
 
-        // Kalau nanti model Order udah siap, lu bisa simpan ke database di sini:
-        // $order = Order::create(array_merge($validatedData, ['total' => $totalPayment]));
-
-        // Setelah lolos validasi, arahkan ke halaman pembayaran (payment)
+        // Arahkan ke halaman pembayaran QRIS
         return redirect()->route('payment.page');
     }
 }
