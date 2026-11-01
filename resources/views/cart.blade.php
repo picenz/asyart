@@ -269,12 +269,20 @@
                 subtotal += itemTotal;
 
                 return `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition bg-gray-50/50">
+                        <div class="flex items-start sm:items-center gap-3 w-full sm:w-auto">
+                            <img src="${item.gambar}" class="w-16 h-16 object-cover rounded bg-gray-100 border border-gray-200 flex-shrink-0">
+                            <div class="space-y-1 w-full">
+                                <h4 class="text-xs font-semibold text-gray-900">${item.nama}</h4>
+
+                                <!-- Dropdown Warna & Ukuran Responsif -->
+                                <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
                     <div class="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div class="flex items-center gap-4 w-full sm:w-auto">
                             <img src="${item.gambar}" class="w-16 h-16 object-cover rounded bg-gray-100 border border-gray-200 shrink-0">
                             <div class="space-y-1.5 w-full">
                                 <h3 class="text-xs font-semibold text-gray-900">${item.nama}</h3>
-                                
+
                                 <!-- DROPDOWN WARNA & UKURAN TERINTEGRASI STOK MERATA & LOCK KOSONG -->
                                 <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
                                     <div class="flex items-center gap-1">
@@ -300,6 +308,20 @@
                                 <p class="text-[10px] text-gray-400">Sisa stok: <span class="font-semibold text-gray-700">${maxStock} pcs</span></p>
                             </div>
                         </div>
+
+                        <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 gap-2">
+                            <span class="text-xs font-bold text-gray-900">Rp${totalItemHarga.toLocaleString('id-ID')}</span>
+
+                            <div class="flex items-center gap-3">
+                                <!-- Tombol Remove dipindah ke sebelah kiri -->
+                                <button type="button" onclick="removeItem(${index})" class="text-[10px] text-red-600 hover:underline">Remove</button>
+
+                                <!-- Kontrol Kuantitas Plus / Minus dipindah ke sebelah kanan -->
+                                <div class="flex items-center border border-gray-200 bg-white rounded text-xs">
+                                    <button type="button" onclick="updateQty(${index}, -1)" class="px-2 py-1 text-gray-500 hover:text-black">-</button>
+                                    <span class="px-2 py-1 font-medium">${item.qty}</span>
+                                    <button type="button" onclick="updateQty(${index}, 1)" class="px-2 py-1 text-gray-500 hover:text-black">+</button>
+                                </div>
 
                         <div class="flex items-center justify-between w-full sm:w-auto gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                             <!-- Kontrol Qty -->

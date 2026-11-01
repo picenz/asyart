@@ -2,138 +2,182 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ApparelController extends Controller
 {
-    private $katalog = [
-        [
-            'id' => 0,
-            'nama' => 'Crop Top Bang Windah',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp90.000',
-            'gambar_hitam' => 'windahcrop-htm.jpg',
-            'gambar_putih' => 'windahcrop-pth.jpg'
-        ],
-        [
-            'id' => 1,
-            'nama' => 'Regular Tee Bocil Bang Windah',
-            'kategori' => 'Short Sleeve',
-            'harga' => 'Rp85.000',
-            'gambar_hitam' => 'windahreg-htm.jpg',
-            'gambar_putih' => 'windahreg-pth.jpg'
-        ],
-        [
-            'id' => 2,
-            'nama' => 'Longsleeve Bang Windah',
-            'kategori' => 'Long Sleeve',
-            'harga' => 'Rp110.000',
-            'gambar_hitam' => 'windahpnjg-htm.jpg',
-            'gambar_putih' => 'windahpnjg-pth.jpg'
-        ],
-        [
-            'id' => 3,
-            'nama' => 'Crop Top Snoopy',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp90.000',
-            'gambar_hitam' => 'snpcrop-htm.jpg',
-            'gambar_putih' => 'snpcrop-pth.jpg'
-        ],
-        [
-            'id' => 4,
-            'nama' => 'Crop Top Radio Head',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp85.000',
-            'gambar_hitam' => 'radiocrop-htm.jpg',
-            'gambar_putih' => 'radiocrop-pth.jpg'
-        ],
-        [
-            'id' => 5,
-            'nama' => 'Crop Top Cake',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp110.000',
-            'gambar_hitam' => 'cakecrop-htm.jpg',
-            'gambar_putih' => 'cakecrop-pth.jpg'
-        ],
-        [
-            'id' => 6,
-            'nama' => 'Crop Top Blue Star Fish',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp95.000',
-            'gambar_hitam' => 'ikanbirucrop-htm.jpg',
-            'gambar_putih' => 'ikanbirucrop-pth.jpg'
-        ],
-        [
-            'id' => 7,
-            'nama' => 'Regular Tee Circle Fish',
-            'kategori' => 'Short Sleeve',
-            'harga' => 'Rp85.000',
-            'gambar_hitam' => 'ikanbulatreg-htm.jpg',
-            'gambar_putih' => 'ikanbulatreg-pth.jpg'
-        ],
-        [
-            'id' => 8,
-            'nama' => 'Longsleeve Puffer Fish',
-            'kategori' => 'Long Sleeve',
-            'harga' => 'Rp115.000',
-            'gambar_hitam' => 'ikanbuntalpnjg-htm.jpg',
-            'gambar_putih' => 'ikanbuntalpnjg-pth.jpg'
-        ],
-        [
-            'id' => 9,
-            'nama' => 'Crop Top Snoopy & Bang Windah',
-            'kategori' => 'Crop Top',
-            'harga' => 'Rp75.000',
-            'gambar_hitam' => 'npcrop-htm.jpg',
-            'gambar_putih' => 'npcrop-pth.jpg'
-        ],
-        [
-            'id' => 10,
-            'nama' => 'Regular Tee Bocil Sigma',
-            'kategori' => 'Regular Tee',
-            'harga' => 'Rp90.000',
-            'gambar_hitam' => 'bclreg-htm.jpg',
-            'gambar_putih' => 'bclreg-pth.jpg'
-        ],
-        [
-            'id' => 11,
-            'nama' => 'Longsleeve Orange Fish',
-            'kategori' => 'Long Sleeve',
-            'harga' => 'Rp80.000',
-            'gambar_hitam' => 'ikanorenpnjg-htm.jpg',
-            'gambar_putih' => 'ikanorenpnjg-pth.jpg'
-        ],
-    ];
+    private function getCatalog()
+    {
+        return Product::with([
+            'variants' => function ($query) {
+                $query->where('is_active', true);
+            },
+            'images' => function ($query) {
+                $query->orderByDesc('is_primary')
+                    ->orderBy('sort_order');
+            }
+        ])
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($product) {
+                $blackImage = $product->images->first(function ($image) {
+                    return str_contains(
+                        strtolower($image->alt_text ?? ''),
+                        'black'
+                    );
+                });
+
+                $whiteImage = $product->images->first(function ($image) {
+                    return str_contains(
+                        strtolower($image->alt_text ?? ''),
+                        'white'
+                    );
+                });
+
+                $firstVariant = $product->variants->first();
+
+                return [
+                    'id' => $product->id,
+                    'nama' => $product->name,
+                    'kategori' => $product->category,
+                    'harga' => $firstVariant
+                        ? 'Rp' . number_format($firstVariant->price, 0, ',', '.')
+                        : 'Harga belum tersedia',
+                    'gambar_hitam' => $blackImage ? basename($blackImage->image_path) : null,
+                    'gambar_putih' => $whiteImage ? basename($whiteImage->image_path) : null,
+
+                    'variants' => $product->variants->map(function ($variant) {
+                        return [
+                            'id' => $variant->id,
+                            'color' => $variant->color,
+                            'size' => $variant->size,
+                            'price' => (float) $variant->price,
+                            'stock' => $variant->stock,
+                        ];
+                    })->values()->all(),
+                ];
+            });
+    }
 
     public function index()
     {
-        $katalog = $this->katalog;
+        $katalog = $this->getCatalog();
+
         return view('home', compact('katalog'));
     }
 
-    public function search(Request $request)
-    {
-        $keyword = $request->input('q');
-        $query = $keyword; // Alias agar kompatibel dengan view search
+ public function search(Request $request)
+{
+    $keyword = trim($request->input('q', ''));
 
-        // Filter produk berdasarkan keyword pencarian
-        $results = collect($this->katalog)->filter(function ($item) use ($keyword) {
-            if (empty($keyword)) return false;
-            return str_contains(strtolower($item['nama']), strtolower($keyword)) ||
-                str_contains(strtolower($item['kategori']), strtolower($keyword));
-        });
+    $katalog = $this->getCatalog();
 
-        return view('search', compact('keyword', 'query', 'results'));
+    // 1. Cari produk yang cocok secara normal
+    $results = $katalog->filter(function ($item) use ($keyword) {
+        if ($keyword === '') {
+            return false;
+        }
+
+        return str_contains(
+            strtolower($item['nama']),
+            strtolower($keyword)
+        ) || str_contains(
+            strtolower($item['kategori'] ?? ''),
+            strtolower($keyword)
+        );
+    })->values();
+
+    // 2. Siapkan rekomendasi berdasarkan kemiripan nama
+    $recommendations = collect();
+    $hasSimilar = false;
+
+    if ($results->isEmpty() && $keyword !== '') {
+
+        $keywordLower = strtolower($keyword);
+
+        $recommendations = $katalog->map(function ($item) use ($keywordLower) {
+
+            $name = strtolower($item['nama']);
+            $category = strtolower($item['kategori'] ?? '');
+
+            // Pecah nama produk menjadi beberapa kata
+            $words = preg_split('/\s+/', $name);
+
+            $bestScore = 0;
+
+            // Bandingkan keyword dengan nama produk dan setiap katanya
+            foreach (array_merge([$name, $category], $words) as $word) {
+
+                similar_text($keywordLower, $word, $similarity);
+
+                $bestScore = max($bestScore, $similarity);
+
+                // Hitung kemiripan berdasarkan jarak typo
+                $maxLength = max(
+                    strlen($keywordLower),
+                    strlen($word)
+                );
+
+                if ($maxLength > 0) {
+                    $distance = levenshtein($keywordLower, $word);
+
+                    $levenshteinScore = (
+                        1 - ($distance / $maxLength)
+                    ) * 100;
+
+                    $bestScore = max(
+                        $bestScore,
+                        $levenshteinScore
+                    );
+                }
+            }
+
+            $item['similarity'] = $bestScore;
+
+            return $item;
+
+        })
+        ->filter(function ($item) {
+            // Minimal kemiripan 55%
+            return $item['similarity'] >= 55;
+        })
+        ->sortByDesc('similarity')
+        ->take(4)
+        ->values();
+
+        $hasSimilar = $recommendations->isNotEmpty();
     }
+
+    // 3. Kalau tidak ada kemiripan, tampilkan rekomendasi acak
+    if ($results->isEmpty() && $recommendations->isEmpty()) {
+        $recommendations = $katalog
+            ->shuffle()
+            ->take(4)
+            ->values();
+    }
+
+    // 4. Kirim data ke Blade
+    return view('search', [
+        'query' => $keyword,
+        'results' => $results,
+        'recommendations' => $recommendations,
+        'hasSimilar' => $hasSimilar,
+    ]);
+}
 
     public function cart()
     {
-        return view('cart'); // Mengarah ke view bag/cart yang konsisten
+        return view('cart');
     }
 
     public function show($id)
     {
-        $product = $this->katalog[$id] ?? abort(404);
+        $product = $this->getCatalog()
+            ->firstWhere('id', (int) $id);
+
+        abort_if(!$product, 404);
+
         return view('detail-product', compact('product'));
     }
 }

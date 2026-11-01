@@ -11,6 +11,7 @@
 
 <body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col justify-between">
 
+
     <!-- NAVBAR PAYMENT -->
     <nav class="border-b border-gray-200 px-6 md:px-16 py-4 bg-white">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
@@ -43,7 +44,8 @@
                 <div
                     class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1 rounded text-amber-700 text-xs font-medium">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    Waiting for payment <span class="text-gray-400 font-normal">| Order #RN-10432</span>
+                    Waiting for payment <span
+                        class="text-gray-400 font-normal">|ASY-{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h1 class="text-3xl font-serif font-medium">Scan to pay with QRIS</h1>
                 <p class="text-xs text-gray-500">Use any e-wallet or mobile banking app. The amount is filled in
@@ -73,7 +75,8 @@
                     <div class="space-y-4 w-full text-center sm:text-left">
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Total payment</p>
-                            <h2 id="qris-total-price" class="text-2xl font-bold text-gray-900">Rp0</h2>
+                            <h2 id="qris-total-price" class="text-2xl font-bold text-gray-900">
+                                Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }} </h2>
                         </div>
 
                         <!-- Bar Timer Hitung Mundur -->
@@ -145,19 +148,41 @@
                 <h3 class="text-sm font-semibold border-b border-gray-100 pb-3">Order Summary</h3>
 
                 <div id="payment-items-list" class="space-y-4 max-h-[320px] overflow-y-auto pr-1">
-                    <!-- Javascript will populate this -->
+
+                    @foreach ($order->items as $item)
+                        <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
+
+                            <div>
+                                <p class="font-semibold text-gray-900">
+                                    {{ $item->product_name }}
+                                </p>
+
+                                <p class="text-[10px] text-gray-400">
+                                    Color: {{ $item->color ?? '-' }}
+                                    | Size: {{ $item->size ?? '-' }}
+                                    | Qty: {{ $item->quantity }}
+                                </p>
+                            </div>
+
+                            <span class="font-semibold text-gray-900">
+                                Rp{{ number_format($item->subtotal, 0, ',', '.') }}
+                            </span>
+
+                        </div>
+                    @endforeach
+
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 space-y-2 text-xs">
                     <div class="flex justify-between text-gray-500">
                         <span>Subtotal</span>
-                        <span id="payment-subtotal" class="font-medium text-gray-900">Rp0</span>
+                        <span id="payment-subtotal" class="font-medium text-gray-900">
+                            Rp{{ number_format(session('order_summary.subtotal', 0), 0, ',', '.') }} </span>
                     </div>
                     <div class="flex justify-between text-gray-500">
                         <span>Shipping</span>
                         <span id="payment-shipping" class="font-medium text-gray-900">
-                            {{ session('order_summary.shipping_cost', 0) > 0 ? 'Rp ' . number_format(session('order_summary.shipping_cost'), 0, ',', '.') : 'Free' }}
-                        </span>
+                            Rp{{ number_format(session('order_summary.shipping_cost', 0), 0, ',', '.') }} </span>
                     </div>
                     <div class="flex justify-between text-gray-500">
                         <span>VAT (11% PPN)</span>
@@ -167,9 +192,12 @@
 
                 <div class="border-t border-gray-100 pt-4 flex justify-between items-center">
                     <span class="text-sm font-bold text-gray-900">Total</span>
-                    <span id="payment-total" class="text-base font-bold text-gray-900">Rp0</span>
+                    <span id="payment-total" class="text-base font-bold text-gray-900">
+                        Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }}
+                    </span>
                 </div>
             </div>
+        </div>
         </div>
 
     </main>
@@ -182,52 +210,40 @@
     <!-- SCRIPT RENDER ORDER SUMMARY & TIMER 1 MENIT (15:00 -> 14:00) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            renderPaymentSummary();
             startCountdown();
         });
 
-        function renderPaymentSummary() {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const container = document.getElementById('payment-items-list');
-            const subtotalEl = document.getElementById('payment-subtotal');
-            const totalEl = document.getElementById('payment-total');
-            const qrisTotalEl = document.getElementById('qris-total-price');
 
-            if (!container) return;
 
-            if (cart.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>`;
-                return;
-            }
+        container.innerHTML = cart.map(item => {
+            let hargaSatuan = parseInt(
+                String(item.harga).replace(/[^0-9]/g, '')
+            ) || 0;
 
-            let subtotal = 0;
+            let totalItemHarga = hargaSatuan * Number(item.qty);
 
-            container.innerHTML = cart.map(item => {
-                let hargaSatuan = parseInt(item.harga.replace(/[^0-9]/g, ''));
-                let totalItemHarga = hargaSatuan * item.qty;
-                subtotal += totalItemHarga;
+            return `
+            <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
+                <div class="flex items-center gap-3">
+                    <img src="${item.gambar}"
+                        class="w-12 h-12 object-cover rounded border border-gray-200">
 
-                return `
-                    <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
-                        <div class="flex items-center gap-3">
-                            <img src="${item.gambar}" class="w-12 h-12 object-cover rounded border border-gray-200">
-                            <div>
-                                <p class="font-semibold text-gray-900">${item.nama}</p>
-                                <p class="text-[10px] text-gray-400">Color: ${item.warna} | Size: ${item.ukuran} | Qty: ${item.qty}</p>
-                            </div>
-                        </div>
-                        <span class="font-semibold text-gray-900">Rp${totalItemHarga.toLocaleString('id-ID')}</span>
+                    <div>
+                        <p class="font-semibold text-gray-900">${item.nama}</p>
+                        <p class="text-[10px] text-gray-400">
+                            Color: ${item.warna} |
+                            Size: ${item.ukuran} |
+                            Qty: ${item.qty}
+                        </p>
                     </div>
-                `;
-            }).join('');
+                </div>
 
-            // Ambil ongkir dari backend session (Laravel)
-            let shippingCost = {{ session('order_summary.shipping_cost', 0) }};
-            let grandTotal = subtotal + shippingCost;
-
-            if (subtotalEl) subtotalEl.innerText = `Rp${subtotal.toLocaleString('id-ID')}`;
-            if (totalEl) totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
-            if (qrisTotalEl) qrisTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
+                <span class="font-semibold text-gray-900">
+                    Rp${totalItemHarga.toLocaleString('id-ID')}
+                </span>
+            </div>
+        `;
+        }).join('');
         }
 
         function startCountdown() {

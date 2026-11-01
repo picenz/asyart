@@ -88,81 +88,116 @@
                 <!-- LIST ORDERS -->
                 <div class="space-y-6">
 
-                    <!-- Order Card 1 -->
-                    <div class="border border-gray-200 rounded-lg p-5 space-y-4 shadow-sm bg-white">
-                        <div class="flex items-center justify-between border-b border-gray-100 pb-3 text-xs">
-                            <div>
-                                <h4 class="font-bold text-gray-900">Order #RN-10432</h4>
-                                <p class="text-[10px] text-gray-400">Placed 2 May 2026</p>
-                            </div>
-                            <span
-                                class="bg-green-100 text-green-800 text-[10px] font-semibold px-2.5 py-1 rounded">Delivered</span>
-                        </div>
+                    @forelse ($orders as $order)
 
-                        <!-- Item Produk dalam Order -->
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-3">
-                                    <img src="{{ asset('images/ikanbirucrop-pth.jpg') }}"
-                                        class="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0">
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Long Sleeve Fish Dishes</p>
-                                        <p class="text-[10px] text-gray-400">White · L · Qty 1</p>
-                                    </div>
+                        <div class="border border-gray-200 rounded-lg p-5 space-y-4 shadow-sm bg-white">
+
+                            <!-- Order Header -->
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-3 text-xs">
+                                <div>
+                                    <h4 class="font-bold text-gray-900">
+                                        Order #ASY-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                                    </h4>
+
+                                    <p class="text-[10px] text-gray-400">
+                                        Placed {{ $order->created_at->format('d M Y') }}
+                                    </p>
                                 </div>
-                                <span class="font-semibold text-gray-900">Rp90.000</span>
+
+                                <span class="bg-green-100 text-green-800 text-[10px] font-semibold px-2.5 py-1 rounded">
+                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                </span>
                             </div>
 
-                            <div class="flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-3">
-                                    <img src="{{ asset('images/ikanbulatreg-pth.jpg') }}"
-                                        class="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0">
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Long Sleeve Tshirt Puffer Fish</p>
-                                        <p class="text-[10px] text-gray-400">White · S · Qty 1</p>
+                            <!-- Order Items -->
+                            <div class="space-y-3">
+
+                                @foreach ($order->items as $item)
+                                    <div class="flex items-center justify-between text-xs">
+
+                                        <div class="flex items-center gap-3">
+
+                                            @php
+                                                $image = $item->product?->images->first();
+                                            @endphp
+
+                                            @if ($image)
+                                                <img src="{{ asset($image->image_path) }}"
+                                                    alt="{{ $item->product_name }}"
+                                                    class="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0">
+                                            @else
+                                                <div
+                                                    class="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex-shrink-0">
+                                                </div>
+                                            @endif
+
+                                            <div>
+                                                <p class="font-semibold text-gray-900">
+                                                    {{ $item->product_name }}
+                                                </p>
+
+                                                <p class="text-[10px] text-gray-400">
+                                                    {{ $item->color ?? '-' }}
+                                                    ·
+                                                    {{ $item->size ?? '-' }}
+                                                    ·
+                                                    Qty {{ $item->quantity }}
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+                                        <span class="font-semibold text-gray-900">
+                                            Rp{{ number_format($item->subtotal, 0, ',', '.') }}
+                                        </span>
+
                                     </div>
+                                @endforeach
+
+                            </div>
+
+                            <!-- Order Footer -->
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-xs">
+
+                                <div class="text-[11px] text-gray-600">
+                                    {{ $order->items->sum('quantity') }} items in this order
                                 </div>
-                                <span class="font-semibold text-gray-900">Rp70.000</span>
+
+                                <div class="text-right">
+                                    <span class="text-[10px] text-gray-400">Total</span>
+
+                                    <span class="font-bold text-gray-900 ml-1">
+                                        Rp{{ number_format($order->total_price, 0, ',', '.') }}
+                                    </span>
+                                </div>
+
                             </div>
+
                         </div>
 
-                        <!-- Footer Card Order (Action & Total) -->
-                        <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-xs">
-                            <div class="flex items-center gap-4 text-[11px] text-gray-600">
-                                <a href="#" class="hover:underline">Track order</a>
-                                <a href="#" class="hover:underline">Return items</a>
-                                <a href="#" class="hover:underline font-medium text-black">Buy again</a>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] text-gray-400">Total</span>
-                                <span class="font-bold text-gray-900 ml-1">Rp160.000</span>
-                            </div>
-                        </div>
-                    </div>
+                    @empty
 
-                    <!-- Order Card 2 -->
-                    <div class="border border-gray-200 rounded-lg p-5 space-y-4 shadow-sm bg-white">
-                        <div class="flex items-center justify-between border-b border-gray-100 pb-3 text-xs">
-                            <div>
-                                <h4 class="font-bold text-gray-900">Order #RN-10021</h4>
-                                <p class="text-[10px] text-gray-400">Placed 14 Apr 2026</p>
-                            </div>
-                            <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2.5 py-1 rounded">In
-                                transit</span>
+                        <div class="text-center py-16 border border-gray-200 rounded-lg">
+                            <p class="text-sm text-gray-500">
+                                You haven't placed any orders yet.
+                            </p>
+
+                            <a href="{{ route('home') }}"
+                                class="inline-block mt-4 text-xs font-semibold text-black underline">
+                                Start Shopping
+                            </a>
                         </div>
 
-                        <div class="flex items-center justify-between text-xs">
-                            <p class="text-gray-500">2 items in this order</p>
-                            <span class="font-bold text-gray-900">Total Rp150.000</span>
-                        </div>
+                    @endforelse
 
-                        <div class="flex justify-end pt-2 border-t border-gray-100">
-                            <a href="#" class="text-xs font-medium text-black hover:underline">View order →</a>
+                    <!-- Pagination -->
+                    @if ($orders->hasPages())
+                        <div class="pt-4">
+                            {{ $orders->links() }}
                         </div>
-                    </div>
+                    @endif
 
                 </div>
-
             </div>
         </div>
 

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 
-<head>
+<<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - ASYART.MERCH</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -63,146 +62,155 @@
         </form>
     </div>
 
-    <!-- CONTAINER UTAMA HASIL PENCARIAN -->
-    <main class="max-w-7xl mx-auto px-4 md:px-12 py-12 space-y-12">
+   <main class="max-w-7xl mx-auto px-4 md:px-12 py-12 space-y-12">
 
-        <!-- HEADER PENCARIAN -->
-        <div>
-            <h1 class="text-2xl md:text-3xl font-serif font-medium mb-2">
-                Search Results for "{{ $query ?? '' }}"
-            </h1>
-            <p class="text-xs text-gray-500">
-                Menampilkan {{ isset($results) ? count($results) : 0 }} produk yang sesuai.
-            </p>
+    {{-- HEADER PENCARIAN --}}
+    <div>
+        <h1 class="text-2xl md:text-3xl font-serif font-medium mb-2">
+            Search Results for "{{ $query ?? '' }}"
+        </h1>
+
+        <p class="text-xs text-gray-500">
+            Menampilkan {{ count($results ?? []) }} produk yang sesuai.
+        </p>
+    </div>
+
+    @if (!empty($results) && count($results) > 0)
+
+        {{-- GRID HASIL PENCARIAN --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+
+            @foreach ($results as $item)
+                <div class="group produk-item space-y-2">
+
+                    <a href="{{ route('product.detail', $item['id']) }}"
+                        class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200 block">
+
+                        <img src="{{ asset('images/' . $item['gambar_hitam']) }}"
+                            alt="{{ $item['nama'] }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </a>
+
+                    <div>
+                        <a href="{{ route('product.detail', $item['id']) }}" class="block">
+                            <h4 class="text-xs font-medium text-gray-900 group-hover:underline">
+                                {{ $item['nama'] }}
+                            </h4>
+                        </a>
+
+                        <p class="text-[10px] text-gray-400">
+                            {{ $item['kategori'] }}
+                        </p>
+
+                        <p class="text-xs font-semibold text-gray-900 mt-0.5">
+                            {{ $item['harga'] }}
+                        </p>
+                    </div>
+                </div>
+            @endforeach
+
         </div>
 
-        @if (isset($results) && count($results) > 0)
-            <!-- GRID PRODUK JIKA KETEMU -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                @foreach ($results as $index => $item)
-                    <div class="group produk-item space-y-2">
-                        <a href="{{ route('product.detail', $item['id'] ?? 0) }}"
-                            class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200 block">
-                            <img src="{{ asset('images/' . $item['gambar_hitam']) }}" alt="{{ $item['nama'] }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        </a>
-                        <div>
-                            <a href="{{ route('product.detail', $item['id'] ?? 0) }}" class="block">
-                                <h4 class="text-xs font-medium text-gray-900 group-hover:underline">{{ $item['nama'] }}
-                                </h4>
-                            </a>
-                            <p class="text-[10px] text-gray-400">{{ $item['kategori'] }}</p>
-                            <p class="text-xs font-semibold text-gray-900 mt-0.5">{{ $item['harga'] }}</p>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <!-- KONDISI JIKA TIDAK KETEMU (KOSONG) -->
-            <div class="text-center py-12 space-y-6 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">
-                <div class="space-y-2">
-                    <p class="text-sm font-medium text-gray-800">Waduh, produk yang lu cari gak ketemu cuy.</p>
-                    <p class="text-xs text-gray-400">Coba kata kunci lain atau cek rekomendasi produk di bawah ini.</p>
-                </div>
-                <div>
-                    <a href="{{ route('home') }}"
-                        class="inline-block border border-black bg-black text-white px-6 py-2.5 rounded text-xs font-medium hover:bg-gray-800 active:scale-95 transition">
-                        Kembali ke Katalog
-                    </a>
-                </div>
+    @else
+
+        {{-- JIKA PRODUK TIDAK DITEMUKAN --}}
+        <div class="text-center py-12 space-y-6 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+
+            <div class="space-y-2">
+                <p class="text-sm font-medium text-gray-800">
+                    Waduh, produk yang lu cari gak ketemu cuy.
+                </p>
+
+                <p class="text-xs text-gray-400">
+                    Coba kata kunci lain atau cek rekomendasi produk di bawah ini.
+                </p>
             </div>
 
-            <!-- SECTION YOU MIGHT LIKE -->
+            <a href="{{ route('home') }}"
+                class="inline-block border border-black bg-black text-white px-6 py-2.5 rounded text-xs font-medium hover:bg-gray-800 active:scale-95 transition">
+                Kembali ke Katalog
+            </a>
+        </div>
+
+        {{-- REKOMENDASI PRODUK --}}
+        @if (!empty($recommendations) && count($recommendations) > 0)
+
             <div class="border-t border-gray-200 pt-12 space-y-6">
-                <h2 class="text-xl md:text-2xl font-serif font-medium">You might like</h2>
 
-                <!-- Grid Produk Rekomendasi Acak -->
-                <div id="dynamic-recommendations" class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    <!-- Dirender via JavaScript secara random -->
+              <h2 class="text-xl md:text-2xl font-serif font-medium">
+    {{ $hasSimilar ? 'Mungkin maksud kamu?' : 'You might like' }}
+</h2>
+
+@if ($hasSimilar)
+    <p class="text-xs text-gray-500">
+        Kami menemukan beberapa produk dengan nama yang mirip dengan "{{ $query }}".
+    </p>
+@else
+    <p class="text-xs text-gray-500">
+        Coba cek beberapa rekomendasi produk berikut.
+    </p>
+@endif
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+
+                    @foreach ($recommendations as $item)
+                        <div class="group space-y-2">
+
+                            <a href="{{ route('product.detail', $item['id']) }}"
+                                class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200 block">
+
+                                <img src="{{ asset('images/' . $item['gambar_hitam']) }}"
+                                    alt="{{ $item['nama'] }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            </a>
+
+                            <div>
+                                <a href="{{ route('product.detail', $item['id']) }}">
+                                    <h4 class="text-xs font-medium text-gray-900 group-hover:underline">
+                                        {{ $item['nama'] }}
+                                    </h4>
+                                </a>
+
+                                <p class="text-[10px] text-gray-400">
+                                    {{ $item['kategori'] }}
+                                </p>
+
+                                <p class="text-xs font-semibold text-gray-900 mt-0.5">
+                                    {{ $item['harga'] }}
+                                </p>
+                            </div>
+
+                        </div>
+                    @endforeach
+
                 </div>
             </div>
+
         @endif
 
-    </main>
+    @endif
 
-    <!-- SCRIPT JAVASCRIPT -->
-    <script>
-        const poolProducts = [{
-                id: 0,
-                nama: "Crop Top Bang Windah",
-                kategori: "Crop Top",
-                harga: "Rp90.000",
-                gambar: "{{ asset('images/windahcrop-htm.jpg') }}"
-            },
-            {
-                id: 1,
-                nama: "Regular Tee Bocil Bang Windah",
-                kategori: "Short Sleeve",
-                harga: "Rp85.000",
-                gambar: "{{ asset('images/windahreg-htm.jpg') }}"
-            },
-            {
-                id: 2,
-                nama: "Longsleeve Bang Windah",
-                kategori: "Long Sleeve",
-                harga: "Rp110.000",
-                gambar: "{{ asset('images/windahpnjg-htm.jpg') }}"
-            },
-            {
-                id: 3,
-                nama: "Crop Top Snoopy",
-                kategori: "Crop Top",
-                harga: "Rp90.000",
-                gambar: "{{ asset('images/snpcrop-htm.jpg') }}"
-            },
-            {
-                id: 4,
-                nama: "Crop Top Radio Head",
-                kategori: "Crop Top",
-                harga: "Rp85.000",
-                gambar: "{{ asset('images/radiocrop-htm.jpg') }}"
-            },
-            {
-                id: 6,
-                nama: "Crop Top Blue Star Fish",
-                kategori: "Crop Top",
-                harga: "Rp95.000",
-                gambar: "{{ asset('images/ikanbirucrop-htm.jpg') }}"
-            }
-        ];
+</main>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            updateCartCountUI();
-            generateRecommendations();
-        });
+ <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCartCountUI();
+    });
 
-        function generateRecommendations() {
-            const recommendationContainer = document.getElementById('dynamic-recommendations');
-            if (recommendationContainer) {
-                const shuffledProducts = [...poolProducts].sort(() => 0.5 - Math.random()).slice(0, 4);
+    function updateCartCountUI() {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-                recommendationContainer.innerHTML = shuffledProducts.map(prod => `
-                    <a href="/product/${prod.id}" class="group block space-y-2">
-                        <div class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200">
-                            <img src="${prod.gambar}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-medium text-gray-900 group-hover:underline">${prod.nama}</h4>
-                            <p class="text-[10px] text-gray-400">${prod.kategori}</p>
-                            <p class="text-xs font-semibold text-gray-900 mt-0.5">${prod.harga}</p>
-                        </div>
-                    </a>
-                `).join('');
-            }
+        let totalItems = cart.reduce((sum, item) => {
+            return sum + Number(item.qty || 0);
+        }, 0);
+
+        const badge = document.getElementById('cart-count-desktop');
+
+        if (badge) {
+            badge.innerText = totalItems;
         }
-
-        function updateCartCountUI() {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            let totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-            const badge = document.getElementById('cart-count-desktop');
-            if (badge) badge.innerText = totalItems;
-        }
-    </script>
+    }
+</script>
 
 </body>
 

@@ -13,10 +13,16 @@ class RoleMiddleware
         Closure $next,
         string $role
     ): Response {
+
         if (!$request->user() || $request->user()->role !== $role) {
-            return response()->json([
-                'message' => 'Akses ditolak.'
-            ], 403);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Akses ditolak.'
+                ], 403);
+            }
+
+            abort(403, 'Kamu tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);

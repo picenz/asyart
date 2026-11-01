@@ -278,12 +278,12 @@
 
     <!-- SCRIPT -->
     <script>
-        let currentSubtotal = 0;
-        let currentShippingCost = 0;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderCheckoutSummary();
-        });
+let currentSubtotal = 0;
+let currentShippingCost = 0;
+
+document.addEventListener('DOMContentLoaded', function () {
+    renderCheckoutSummary();
 
         function proceedAsGuest() {
             let email = document.getElementById('guest-email').value;
@@ -300,49 +300,71 @@
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             document.getElementById('input-cart-data').value = JSON.stringify(cart);
 
-            // Catatan buat temen BE: setelah order sukses diproses di controller, 
+            // Catatan buat temen BE: setelah order sukses diproses di controller,
             // pastikan backend nge-redirect ke route('payment.success')
         }
 
-        function renderCheckoutSummary() {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const container = document.getElementById('checkout-items-list');
-            const subtotalEl = document.getElementById('summary-subtotal');
+function renderCheckoutSummary() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-            if (!container) return;
+    const container = document.getElementById('checkout-items-list');
+    const subtotalEl = document.getElementById('summary-subtotal');
 
-            if (cart.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>`;
-                return;
-            }
+    if (!container) return;
 
-            currentSubtotal = 0;
+    if (cart.length === 0) {
+        container.innerHTML =
+            '<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>';
 
-            container.innerHTML = cart.map(item => {
-                let hargaSatuan = parseInt(item.harga.replace(/[^0-9]/g, ''));
-                let totalItemHarga = hargaSatuan * item.qty;
-                currentSubtotal += totalItemHarga;
+        currentSubtotal = 0;
+        updateTotalDisplay();
+        return;
+    }
 
-                return `
-                    <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
-                        <div class="flex items-center gap-3">
-                            <img src="${item.gambar}" class="w-12 h-12 object-cover rounded border border-gray-200">
-                            <div>
-                                <p class="font-semibold text-gray-900">${item.nama}</p>
-                                <p class="text-[10px] text-gray-400">Color: ${item.warna} | Size: ${item.ukuran} | Qty: ${item.qty}</p>
-                            </div>
-                        </div>
-                        <span class="font-semibold text-gray-900">Rp${totalItemHarga.toLocaleString('id-ID')}</span>
+    currentSubtotal = 0;
+
+    container.innerHTML = cart.map(item => {
+        const hargaSatuan = Number(
+            String(item.price ?? item.harga ?? 0).replace(/[^0-9]/g, '')
+        );
+
+        const qty = Number(item.qty || 1);
+        const totalItemHarga = hargaSatuan * qty;
+
+        currentSubtotal += totalItemHarga;
+
+        const nama = item.name ?? item.nama ?? 'Produk';
+        const gambar = item.image ?? item.gambar ?? '';
+        const warna = item.color ?? item.warna ?? '-';
+        const ukuran = item.size ?? item.ukuran ?? '-';
+
+        return `
+            <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
+                <div class="flex items-center gap-3">
+                    <img src="${gambar}"
+                        class="w-12 h-12 object-cover rounded border border-gray-200">
+
+                    <div>
+                        <p class="font-semibold text-gray-900">${nama}</p>
+                        <p class="text-[10px] text-gray-400">
+                            Color: ${warna} | Size: ${ukuran} | Qty: ${qty}
+                        </p>
                     </div>
-                `;
-            }).join('');
+                </div>
+
+                <span class="font-semibold text-gray-900">
+                    Rp${totalItemHarga.toLocaleString('id-ID')}
+                </span>
+            </div>
+        `;
+    }).join('');
 
             if (subtotalEl) subtotalEl.innerText = `Rp${currentSubtotal.toLocaleString('id-ID')}`;
             updateTotalDisplay();
         }
 
-        function updateShipping(cost, labelText) {
-            currentShippingCost = cost;
+function updateShipping(cost, labelText) {
+    currentShippingCost = Number(cost);
 
             const shippingEl = document.getElementById('summary-shipping');
             if (shippingEl) shippingEl.innerText = labelText;
@@ -350,18 +372,24 @@
             const hiddenInput = document.getElementById('input-shipping-cost');
             if (hiddenInput) hiddenInput.value = cost;
 
-            updateTotalDisplay();
-        }
+    updateTotalDisplay();
+}
 
-        function updateTotalDisplay() {
-            let grandTotal = currentSubtotal + currentShippingCost;
+function updateTotalDisplay() {
+    const grandTotal = currentSubtotal + currentShippingCost;
 
-            const totalEl = document.getElementById('summary-total');
-            const btnTotalEl = document.getElementById('btn-total-price');
+    const totalEl = document.getElementById('summary-total');
+    const btnTotalEl = document.getElementById('btn-total-price');
 
-            if (totalEl) totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
-            if (btnTotalEl) btnTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
-        }
+    if (totalEl) {
+        totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
+    }
+
+    if (btnTotalEl) {
+        btnTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
+    }
+}
+
     </script>
 
 </body>

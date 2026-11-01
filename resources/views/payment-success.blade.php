@@ -21,8 +21,6 @@
 
     <!-- KONTEN UTAMA RESPONSIF -->
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12 w-full flex-1 space-y-8 md:space-y-10">
-
-        <!-- HEADER SUKSES -->
         <div class="text-center space-y-3">
             <div
                 class="w-12 h-12 mx-auto rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-800 shadow-sm">
@@ -30,6 +28,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
             </div>
+
             <div class="space-y-1">
                 <!-- NOMOR ORDER RN DINAMIS DARI BACKEND -->
                 <p class="text-xs text-gray-400 font-mono tracking-wider">ORDER
@@ -57,7 +56,9 @@
                     <div class="border-t border-gray-100 pt-4 space-y-2 text-xs">
                         <div class="flex justify-between text-gray-500">
                             <span>Subtotal</span>
-                            <span id="success-subtotal" class="font-medium text-gray-900">Rp0</span>
+                            <span id="success-subtotal" class="font-medium text-gray-900">
+                                Rp{{ number_format($order->items->sum('subtotal'), 0, ',', '.') }}
+                            </span>
                         </div>
                         <div class="flex justify-between text-gray-500">
                             <span>Shipping</span>
@@ -67,7 +68,9 @@
                         </div>
                         <div class="flex justify-between text-gray-500">
                             <span>VAT (11% PPN)</span>
-                            <span class="font-medium text-gray-900">Included</span>
+                            <span class="font-medium text-gray-900">
+                                Rp{{ number_format($order->tax, 0, ',', '.') }}
+                            </span>
                         </div>
                     </div>
 
@@ -125,7 +128,7 @@
 
         <!-- TOMBOL AKSI BAWAH -->
         <div class="max-w-sm mx-auto space-y-3 pt-2 px-4 sm:px-0">
-            <a href="{{ route('home') }}" onclick="localStorage.removeItem('cart');"
+            <a href="{{ route('home') }}" onclick="clearCart()"
                 class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
                 Continue shopping
             </a>

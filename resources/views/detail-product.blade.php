@@ -624,7 +624,7 @@
                 }
 
                 return `
-                    <button type="button" onclick="${isOutOfStock ? '' : `selectSize('${size}')`}" 
+                    <button type="button" onclick="${isOutOfStock ? '' : `selectSize('${size}')`}"
                         class="${btnClasses}">${size}</button>
                 `;
             }).join('');
@@ -834,10 +834,11 @@
                 });
             }
 
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCountUI();
-            showToast();
-        }
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    updateCartCountUI();
+    showToast();
+}
 
         function showToast() {
             let toast = document.getElementById('cart-toast');
@@ -882,5 +883,5 @@
     </script>
 
 </body>
-    
+
 </html>

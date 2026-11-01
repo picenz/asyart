@@ -4,7 +4,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+
 
 // Endpoint user Sanctum
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -23,7 +25,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'apiDestroy']);
 });
 
-Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
+// Route::post('/admin/register', [AuthController::class, 'registerAdmin']);
 Route::post('/admin/login', function (Request $request) {
     $request->validate([
         'email' => 'required|email',

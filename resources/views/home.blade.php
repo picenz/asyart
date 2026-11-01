@@ -337,51 +337,63 @@
 
         <!-- Grid Cards Container -->
         <div id="katalog-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-            @foreach ($katalog as $index => $item)
+
+            @foreach ($katalog as $item)
                 @php
                     $hargaAngka = (int) preg_replace('/[^0-9]/', '', $item['harga']);
                 @endphp
+
                 <div class="group produk-item" data-kategori="{{ $item['kategori'] }}"
                     data-nama="{{ $item['nama'] }}" data-harga="{{ $hargaAngka }}"
-                    data-index="{{ $index }}"
+                    data-index="{{ $item['id'] }}"
                     data-gambar-hitam="{{ asset('images/' . $item['gambar_hitam']) }}"
                     data-gambar-putih="{{ asset('images/' . $item['gambar_putih']) }}">
 
                     <!-- Box Gambar -->
-                    <a href="{{ route('product.detail', $index) }}"
+                    <a href="{{ route('product.detail', $item['id']) }}"
                         class="aspect-square bg-gray-100 mb-2 overflow-hidden rounded-md relative block cursor-pointer">
-                        <img id="produk-img-{{ $index }}"
+
+                        <img id="produk-img-{{ $item['id'] }}"
                             src="{{ asset('images/' . $item['gambar_hitam']) }}" alt="{{ $item['nama'] }}"
                             class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     </a>
 
-                    <!-- Tombol Buletan Warna -->
+                    <!-- Tombol Warna -->
                     <div class="flex items-center gap-1.5 mb-2">
+
                         <button type="button"
-                            onclick="pilihWarna('{{ $index }}', '{{ asset('images/' . $item['gambar_hitam']) }}', this)"
+                            onclick="pilihWarna('{{ $item['id'] }}', '{{ asset('images/' . $item['gambar_hitam']) }}', this)"
                             class="w-4 h-4 rounded-full bg-black ring-2 ring-black ring-offset-1 hover:scale-110 active:scale-95 transition cursor-pointer focus:outline-none"
                             title="Hitam">
                         </button>
 
                         <button type="button"
-                            onclick="pilihWarna('{{ $index }}', '{{ asset('images/' . $item['gambar_putih']) }}', this)"
+                            onclick="pilihWarna('{{ $item['id'] }}', '{{ asset('images/' . $item['gambar_putih']) }}', this)"
                             class="w-4 h-4 rounded-full bg-white border border-gray-300 hover:scale-110 active:scale-95 transition cursor-pointer focus:outline-none"
                             title="Putih">
                         </button>
+
                     </div>
 
-                    <!-- Teks Info Produk -->
-                    <a href="{{ route('product.detail', $index) }}" class="block">
+                    <!-- Informasi Produk -->
+                    <a href="{{ route('product.detail', $item['id']) }}" class="block">
                         <h3 class="text-xs md:text-sm font-medium text-gray-900 group-hover:underline cursor-pointer">
                             {{ $item['nama'] }}
                         </h3>
                     </a>
-                    <p class="text-[11px] text-gray-400">{{ $item['kategori'] }}</p>
-                    <p class="text-xs font-semibold mt-1">{{ $item['harga'] }}</p>
+
+                    <p class="text-[11px] text-gray-400">
+                        {{ $item['kategori'] }}
+                    </p>
+
+                    <p class="text-xs font-semibold mt-1">
+                        {{ $item['harga'] }}
+                    </p>
+
                 </div>
             @endforeach
-        </div>
 
+        </div>
         <!-- LOAD MORE BUTTON -->
         <div id="load-more-section" class="text-center space-y-3 pt-4 border-t border-gray-100">
             <p id="showing-text" class="text-[11px] text-gray-400">Showing 12 of 12 items</p>
@@ -500,8 +512,8 @@
             </button>
         </div>
     </div>
+ </div>
 
-    <!-- SCRIPT JAVASCRIPT MASTER UTAMA -->
     <script>
         let currentKategori = 'All';
         let recentSearches = ['Long Sleeve', 'Baby Tee', 'Baby Tee Bang Windah'];
@@ -613,113 +625,114 @@
         }
 
         function toggleSizeBtn(btn) {
-            btn.classList.toggle('bg-black');
-            btn.classList.toggle('text-white');
-            btn.classList.toggle('border-black');
-            btn.classList.toggle('border-gray-200');
-            btn.classList.toggle('active-size-filter');
-            applyFiltersAndSort();
+        btn.classList.toggle('bg-black');
+        btn.classList.toggle('text-white');
+        btn.classList.toggle('border-black');
+        btn.classList.toggle('border-gray-200');
+        btn.classList.toggle('active-size-filter');
+        applyFiltersAndSort();
         }
 
         function toggleColorSwatch(btn, colorName) {
-            if (activeColorFilter === colorName) {
-                activeColorFilter = null;
-                btn.classList.add('opacity-60');
-            } else {
-                activeColorFilter = colorName;
-                document.querySelectorAll('.color-swatch-btn').forEach(s => s.classList.add('opacity-60'));
-                btn.classList.remove('opacity-60');
-            }
+        if (activeColorFilter === colorName) {
+        activeColorFilter = null;
+        btn.classList.add('opacity-60');
+        } else {
+        activeColorFilter = colorName;
+        document.querySelectorAll('.color-swatch-btn').forEach(s => s.classList.add('opacity-60'));
+        btn.classList.remove('opacity-60');
+        }
 
-            const items = document.querySelectorAll('.produk-item');
-            items.forEach(item => {
-                const index = item.getAttribute('data-index');
-                const imgHitam = item.getAttribute('data-gambar-hitam');
-                const imgPutih = item.getAttribute('data-gambar-putih');
-                const imgElement = document.getElementById('produk-img-' + index);
+        const items = document.querySelectorAll('.produk-item');
+        items.forEach(item => {
+        const index = item.getAttribute('data-index');
+        const imgHitam = item.getAttribute('data-gambar-hitam');
+        const imgPutih = item.getAttribute('data-gambar-putih');
+        const imgElement = document.getElementById('produk-img-' + index);
 
-                const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
-                const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
-                const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
+        const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
+        const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
+        const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
 
-                if (imgElement) {
-                    if (activeColorFilter === 'White') {
-                        imgElement.src = imgPutih;
-                        if (btnPutih && btnHitam) {
-                            btnPutih.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnHitam.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    } else {
-                        imgElement.src = imgHitam;
-                        if (btnPutih && btnHitam) {
-                            btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    }
-                }
-            });
+        if (imgElement) {
+        if (activeColorFilter === 'White') {
+        imgElement.src = imgPutih;
+        if (btnPutih && btnHitam) {
+        btnPutih.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        btnHitam.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
+        }
+        } else {
+        imgElement.src = imgHitam;
+        if (btnPutih && btnHitam) {
+        btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
+        }
+        }
+        }
+        });
 
-            applyFiltersAndSort();
+        applyFiltersAndSort();
         }
 
         function clearAllFilters() {
-            const firstPill = document.querySelector('.btn-kategori');
-            if (firstPill) filterKategori('All', firstPill);
+        const firstPill = document.querySelector('.btn-kategori');
+        if (firstPill) filterKategori('All', firstPill);
 
-            document.querySelectorAll('.drawer-cat-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.drawer-cat-checkbox').forEach(cb => cb.checked = false);
 
-            document.querySelectorAll('.size-btn').forEach(btn => {
-                btn.className =
+        document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.className =
                     'size-btn border border-gray-200 min-w-[38px] py-2 text-center text-xs rounded hover:border-black transition';
-                btn.classList.remove('active-size-filter');
-            });
+        btn.classList.remove('active-size-filter');
+        });
 
-            activeColorFilter = null;
-            document.querySelectorAll('.color-swatch-btn').forEach(s => s.classList.add('opacity-60'));
+        activeColorFilter = null;
+        document.querySelectorAll('.color-swatch-btn').forEach(s => s.classList.add('opacity-60'));
 
-            const items = document.querySelectorAll('.produk-item');
-            items.forEach(item => {
-                const index = item.getAttribute('data-index');
-                const imgHitam = item.getAttribute('data-gambar-hitam');
-                const imgElement = document.getElementById('produk-img-' + index);
+        const items = document.querySelectorAll('.produk-item');
+        items.forEach(item => {
+        const index = item.getAttribute('data-index');
+        const imgHitam = item.getAttribute('data-gambar-hitam');
+        const imgElement = document.getElementById('produk-img-' + index);
 
-                const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
-                const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
-                const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
+        const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
+        const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
+        const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
 
-                if (imgElement) imgElement.src = imgHitam;
-                if (btnHitam && btnPutih) {
-                    btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                    btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                }
-            });
+        if (imgElement) imgElement.src = imgHitam;
+        if (btnHitam && btnPutih) {
+        btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
+        }
+        });
 
-            applyFiltersAndSort();
+        applyFiltersAndSort();
         }
 
         function pilihWarna(index, gambarUrl, element) {
-            const imgElement = document.getElementById('produk-img-' + index);
-            if (imgElement) {
-                imgElement.src = gambarUrl;
-            }
+        const imgElement = document.getElementById('produk-img-' + index);
+        if (imgElement) {
+        imgElement.src = gambarUrl;
+        }
 
-            const parent = element.parentElement;
-            if (parent) {
-                const buttons = parent.querySelectorAll('button');
-                buttons.forEach(btn => btn.classList.remove('ring-2', 'ring-black', 'ring-offset-1'));
-                element.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-            }
+        const parent = element.parentElement;
+        if (parent) {
+        const buttons = parent.querySelectorAll('button');
+        buttons.forEach(btn => btn.classList.remove('ring-2', 'ring-black', 'ring-offset-1'));
+        element.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        }
         }
 
         function filterKategori(kategori, element) {
-            currentKategori = kategori;
-            const buttons = document.querySelectorAll('.btn-kategori');
-            buttons.forEach(btn => btn.className =
+        currentKategori = kategori;
+        const buttons = document.querySelectorAll('.btn-kategori');
+        buttons.forEach(btn =>
+        btn.className =
                 'btn-kategori bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-black hover:text-white active:scale-95 transition duration-200'
-            );
-            element.className =
+        );
+        element.className =
                 'btn-kategori bg-black text-white px-4 py-2 rounded-md active:scale-95 transition duration-150';
-            applyFiltersAndSort();
+        applyFiltersAndSort();
         }
 
         // FUNGSI SEARCH OVERLAY
@@ -770,7 +783,7 @@
                 if (clearBtnMobile) clearBtnMobile.style.display = 'none';
             }
 
-            renderSuggestions(query);
+        renderSuggestions(query);
         }
 
         function clearSearchInput() {
@@ -788,13 +801,13 @@
         }
 
         function renderRecentSearches() {
-            const container = document.getElementById('recent-searches-list');
-            if (!container) return;
+        const container = document.getElementById('recent-searches-list');
+        if (!container) return;
 
-            if (recentSearches.length === 0) {
-                container.innerHTML = '<li class="text-gray-400 text-[11px]">No recent searches</li>';
-                return;
-            }
+        if (recentSearches.length === 0) {
+        container.innerHTML = '<li class="text-gray-400 text-[11px]">No recent searches</li>';
+        return;
+        }
 
             container.innerHTML = recentSearches.map((item, idx) => `
                 <li class="flex items-center justify-between text-gray-600 hover:text-black group">
@@ -808,30 +821,30 @@
         }
 
         function removeRecentSearch(idx) {
-            recentSearches.splice(idx, 1);
-            renderRecentSearches();
+        recentSearches.splice(idx, 1);
+        renderRecentSearches();
         }
 
         function clearAllRecentSearches() {
-            recentSearches = [];
-            renderRecentSearches();
+        recentSearches = [];
+        renderRecentSearches();
         }
 
         function renderSuggestions(query) {
-            const sugContainer = document.getElementById('suggestions-list');
-            const prevContainer = document.getElementById('search-products-preview');
-            const resultCountEl = document.getElementById('search-result-count');
+        const sugContainer = document.getElementById('suggestions-list');
+        const prevContainer = document.getElementById('search-products-preview');
+        const resultCountEl = document.getElementById('search-result-count');
 
             if (!sugContainer || !prevContainer) return;
 
             const q = (query || '').toLowerCase().trim();
             const items = Array.from(document.querySelectorAll('.produk-item'));
 
-            const matchingItems = items.filter(item => {
-                const nama = item.getAttribute('data-nama').toLowerCase();
-                const kategori = item.getAttribute('data-kategori').toLowerCase();
-                return nama.includes(q) || kategori.includes(q);
-            });
+        const matchingItems = items.filter(item => {
+        const nama = item.getAttribute('data-nama').toLowerCase();
+        const kategori = item.getAttribute('data-kategori').toLowerCase();
+        return nama.includes(q) || kategori.includes(q);
+        });
 
             if (q === '') {
                 sugContainer.innerHTML = `
@@ -853,7 +866,7 @@
                 `).join('') || '<li class="text-gray-400">No suggestions found</li>';
             }
 
-            if (resultCountEl) resultCountEl.innerText = matchingItems.length;
+        if (resultCountEl) resultCountEl.innerText = matchingItems.length;
 
             prevContainer.innerHTML = matchingItems.slice(0, 3).map((item) => `
                 <a href="/product/${item.getAttribute('data-index')}" class="flex items-center gap-3 p-1 rounded hover:bg-gray-50 cursor-pointer block">
@@ -874,54 +887,54 @@
             if (desktopInput) desktopInput.value = tagText;
             if (mobileInput) mobileInput.value = tagText;
 
-            if (!recentSearches.includes(tagText)) {
-                recentSearches.unshift(tagText);
-                if (recentSearches.length > 5) recentSearches.pop();
-                renderRecentSearches();
-            }
+        if (!recentSearches.includes(tagText)) {
+        recentSearches.unshift(tagText);
+        if (recentSearches.length > 5) recentSearches.pop();
+        renderRecentSearches();
+        }
 
-            window.location.href = "{{ route('search.page') }}?q=" + encodeURIComponent(tagText);
+        window.location.href = "{{ route('search.page') }}?q=" + encodeURIComponent(tagText);
         }
 
         function applyFiltersAndSort() {
-            const sortVal = document.getElementById('sort-select').value;
-            const container = document.getElementById('katalog-grid');
-            const items = Array.from(document.querySelectorAll('.produk-item'));
+        const sortVal = document.getElementById('sort-select').value;
+        const container = document.getElementById('katalog-grid');
+        const items = Array.from(document.querySelectorAll('.produk-item'));
 
-            const selectedDrawerCats = Array.from(document.querySelectorAll('.drawer-cat-checkbox:checked')).map(cb => cb
-                .value);
-            const selectedSizes = Array.from(document.querySelectorAll('.active-size-filter')).map(btn => btn.getAttribute(
-                'data-size'));
+        const selectedDrawerCats = Array.from(document.querySelectorAll('.drawer-cat-checkbox:checked')).map(cb => cb
+        .value);
+        const selectedSizes = Array.from(document.querySelectorAll('.active-size-filter')).map(btn => btn.getAttribute(
+        'data-size'));
 
-            let visibleCount = 0;
+        let visibleCount = 0;
 
-            items.forEach(item => {
-                const index = item.getAttribute('data-index');
-                const imgHitam = item.getAttribute('data-gambar-hitam');
-                const imgPutih = item.getAttribute('data-gambar-putih');
-                const imgElement = document.getElementById('produk-img-' + index);
+        items.forEach(item => {
+        const index = item.getAttribute('data-index');
+        const imgHitam = item.getAttribute('data-gambar-hitam');
+        const imgPutih = item.getAttribute('data-gambar-putih');
+        const imgElement = document.getElementById('produk-img-' + index);
 
-                const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
-                const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
-                const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
+        const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
+        const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
+        const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
 
-                if (imgElement) {
-                    if (activeColorFilter === 'White') {
-                        imgElement.src = imgPutih;
-                        if (btnPutih && btnHitam) {
-                            btnPutih.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnHitam.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    } else {
-                        imgElement.src = imgHitam;
-                        if (btnPutih && btnHitam) {
-                            btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    }
-                }
+        if (imgElement) {
+        if (activeColorFilter === 'White') {
+        imgElement.src = imgPutih;
+        if (btnPutih && btnHitam) {
+        btnPutih.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        btnHitam.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
+        }
+        } else {
+        imgElement.src = imgHitam;
+        if (btnPutih && btnHitam) {
+        btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
+        btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
+        }
+        }
+        }
 
-                const itemKategori = item.getAttribute('data-kategori');
+        const itemKategori = item.getAttribute('data-kategori');
 
                 let matchesPillCategory = false;
                 if (currentKategori === 'All') {
@@ -935,54 +948,54 @@
                     matchesDrawerCategory = selectedDrawerCats.includes(itemKategori);
                 }
 
-                if (matchesPillCategory && matchesDrawerCategory) {
-                    item.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
+        if (matchesPillCategory && matchesDrawerCategory) {
+        item.style.display = 'block';
+        visibleCount++;
+        } else {
+        item.style.display = 'none';
+        }
+        });
 
-            let totalActiveFilters = 0;
-            if (currentKategori !== 'All') totalActiveFilters++;
-            totalActiveFilters += selectedDrawerCats.length;
-            totalActiveFilters += selectedSizes.length;
-            if (activeColorFilter) totalActiveFilters++;
+        let totalActiveFilters = 0;
+        if (currentKategori !== 'All') totalActiveFilters++;
+        totalActiveFilters += selectedDrawerCats.length;
+        totalActiveFilters += selectedSizes.length;
+        if (activeColorFilter) totalActiveFilters++;
 
-            document.getElementById('filters-btn-count').innerText = `(${totalActiveFilters})`;
-            document.getElementById('drawer-filter-count').innerText = `(${totalActiveFilters})`;
-            document.getElementById('results-count').innerText = visibleCount;
-            document.getElementById('showing-text').innerText = `Showing ${visibleCount} of 12 items`;
+        document.getElementById('filters-btn-count').innerText = `(${totalActiveFilters})`;
+        document.getElementById('drawer-filter-count').innerText = `(${totalActiveFilters})`;
+        document.getElementById('results-count').innerText = visibleCount;
+        document.getElementById('showing-text').innerText = `Showing ${visibleCount} of 12 items`;
 
-            items.sort((a, b) => {
-                const hargaA = parseInt(a.getAttribute('data-harga'));
-                const hargaB = parseInt(b.getAttribute('data-harga'));
-                const indexA = parseInt(a.getAttribute('data-index'));
-                const indexB = parseInt(b.getAttribute('data-index'));
+        items.sort((a, b) => {
+        const hargaA = parseInt(a.getAttribute('data-harga'));
+        const hargaB = parseInt(b.getAttribute('data-harga'));
+        const indexA = parseInt(a.getAttribute('data-index'));
+        const indexB = parseInt(b.getAttribute('data-index'));
 
-                if (sortVal === 'Price: Low to High') {
-                    return hargaA - hargaB;
-                } else if (sortVal === 'Price: High to Low') {
-                    return hargaB - hargaA;
-                } else {
-                    return indexA - indexB;
-                }
-            });
+        if (sortVal === 'Price: Low to High') {
+        return hargaA - hargaB;
+        } else if (sortVal === 'Price: High to Low') {
+        return hargaB - hargaA;
+        } else {
+        return indexA - indexB;
+        }
+        });
 
-            items.forEach(item => container.appendChild(item));
+        items.forEach(item => container.appendChild(item));
         }
 
         function updateCartCountUI() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let totalUniqueItems = cart.length;
 
-            const badgeDesktop = document.getElementById('cart-count-desktop');
-            const badgeMobile = document.getElementById('cart-count-mobile');
+        const badgeDesktop = document.getElementById('cart-count-desktop');
+        const badgeMobile = document.getElementById('cart-count-mobile');
 
-            if (badgeDesktop) badgeDesktop.innerText = totalUniqueItems;
-            if (badgeMobile) badgeMobile.innerText = totalUniqueItems;
+        if (badgeDesktop) badgeDesktop.innerText = totalUniqueItems;
+        if (badgeMobile) badgeMobile.innerText = totalUniqueItems;
         }
-    </script>
+        </script>
 
 </body>
 
