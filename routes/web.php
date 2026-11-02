@@ -75,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('payment.success');
 });
 
-// --- RUTE DASHBOARD & AUTH (LARAVEL BREEZE) ---
+// --- RUTE DASHBOARD & ADMIN ---
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         if (auth()->user()->role === 'admin') {
@@ -84,12 +84,60 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('customer.dashboard');
     })->name('dashboard');
 
-    Route::get('/admin/dashboard', function () {
-        abort_unless(auth()->user()->role === 'admin', 403);
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    // Group Admin Routes
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', function () {
+            abort_unless(auth()->user()->role === 'admin', 403);
+            return view('admin.dashboard');
+        })->name('dashboard');
 
-    Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders');
+        // Rute Orders Admin
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.detail');
+        Route::patch('/orders/{id}/ship', [AdminOrderController::class, 'markAsShipped'])->name('orders.ship');
+        Route::patch('/orders/{id}/complete', [AdminOrderController::class, 'markAsCompleted'])->name('orders.complete');
+        Route::get('/orders-export', [AdminOrderController::class, 'export'])->name('orders.export');
+
+        // Rute Products Admin (Index, Create, Store, Edit, Destroy)
+        Route::get('/products', function () {
+            return view('admin.products.index');
+        })->name('products.index');
+
+        Route::get('/products/create', function () {
+            return view('admin.products.create');
+        })->name('products.create');
+
+        Route::post('/products', function (Request $request) {
+            return redirect()->route('admin.products.index')->with('success', 'Product saved successfully.');
+        })->name('products.store');
+
+        Route::get('/products/{id}/edit', function () {
+            return view('admin.products.edit');
+        })->name('products.edit');
+
+        // Rute Hapus Produk
+        Route::delete('/products/{id}', function ($id) {
+            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+        })->name('products.destroy');
+
+        // Rute QRIS Transactions Admin (Index & Detail)
+        Route::get('/qris', function () {
+            return view('admin.qris');
+        })->name('qris.index');
+
+        Route::get('/qris/{id}', function ($id) {
+            // Nanti bagian backend bisa menyesuaikan dengan Controller atau mengambil data dari model Orders
+            return view('admin.qris-detail');
+        })->name('qris.detail');
+
+        Route::get('/settings', function () {
+            return view('admin.settings');
+        })->name('settings.index');
+
+        Route::get('/account', function () {
+            return view('admin.account');
+        })->name('account');
+    });
 
     Route::get('/customer/dashboard', function () {
         abort_unless(auth()->user()->role === 'customer', 403);
