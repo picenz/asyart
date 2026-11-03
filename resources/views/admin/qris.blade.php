@@ -1,14 +1,13 @@
 @extends('layouts.admin', ['title' => 'Admin - QRIS Transactions'])
 
 @section('content')
-    <!-- Tanpa max-w-5xl, lebarnya bakal otomatis full dan sama persis kayak halaman Orders -->
-    <di class="space-y-6 pb-12">
-
+    <div class="space-y-6">
         <!-- PAGE HEADER & EXPORT CSV -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">QRIS Transactions</h1>
-                <p class="text-xs text-gray-500 mt-0.5">Every QR code generated at checkout. Statuses update automatically.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Every QR code generated at checkout. Statuses update automatically.
+                </p>
             </div>
 
             <div>
@@ -22,7 +21,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- STATS CARDS (3 KOTAK RINGKASAN) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Received Today -->
@@ -119,7 +118,6 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-800">
                         @forelse($qrisTransactions ?? [] as $trx)
-                            <!-- Loop data dinamis dari backend nantinya -->
                             <tr class="hover:bg-gray-50/50 transition">
                                 <td class="py-3.5 px-6 font-medium text-gray-900">
                                     <a href="{{ route('admin.qris.detail', $trx->id ?? 1) }}"
@@ -153,7 +151,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <!-- DATA STATIS CADANGAN SESUAI FIGMA / SCREENSHOT -->
+                            <!-- DATA STATIS CADANGAN -->
                             <tr class="hover:bg-gray-50/50 transition">
                                 <td class="py-3.5 px-6 font-medium text-gray-900">
                                     <a href="{{ route('admin.qris.detail', 1) }}"
@@ -292,6 +290,5 @@
             </div>
 
         </div>
-
     </div>
 @endsection

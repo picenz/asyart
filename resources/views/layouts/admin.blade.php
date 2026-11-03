@@ -15,17 +15,18 @@
     </style>
 </head>
 
-<body class="bg-gray-100 text-gray-900 antialiased" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-100 text-gray-900 antialiased min-h-screen" x-data="{ sidebarOpen: false }">
 
-    <div class="flex h-screen overflow-hidden">
+    <!-- WRAPPER UTAMA (Grid / Flex natural tanpa jebakan h-screen ketat) -->
+    <div class="min-h-screen flex flex-col md:flex-row">
 
         <!-- BACKDROP MOBILE SAAT SIDEBAR BUKA -->
         <div x-show="sidebarOpen" @click="sidebarOpen = false"
             class="fixed inset-0 z-20 bg-black/50 transition-opacity md:hidden" style="display: none;"></div>
 
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (Fixed di mobile, Sticky/Normal di desktop supaya konsisten tingginya) -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-auto">
+            class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 md:h-screen">
             <div>
                 <!-- Logo & Tombol Close Mobile -->
                 <div class="h-16 flex items-center justify-between px-6 border-b border-gray-100">
@@ -98,7 +99,7 @@
                 </nav>
             </div>
 
-            <!-- Bagian Bawah Sidebar (Tombol Account Hitam Aktif) -->
+            <!-- Bagian Bawah Sidebar -->
             <div class="p-4 border-t border-gray-100 space-y-1">
                 <a href="{{ route('admin.account') }}"
                     class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.account*') || request()->is('admin/account*') ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50' }}">
@@ -122,8 +123,8 @@
             </div>
         </aside>
 
-        <!-- KONTEN UTAMA -->
-        <div class="flex-1 flex flex-col overflow-y-auto">
+        <!-- KONTEN UTAMA (Fleksibel alami tanpa batasan overflow tersembunyi yang bikin aneh) -->
+        <div class="flex-1 flex flex-col min-w-0">
 
             <!-- TOPBAR / HEADER -->
             <header
@@ -180,7 +181,7 @@
             </header>
 
             <!-- ISI HALAMAN UTAMA -->
-            <main class="p-4 sm:p-8">
+            <main class="p-4 sm:p-8 flex-1">
                 @yield('content')
             </main>
 
