@@ -76,7 +76,7 @@
                         <div>
                             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Total payment</p>
                             <h2 id="qris-total-price" class="text-2xl font-bold text-gray-900">
-                                Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }} </h2>
+                                Rp{{ number_format($total, 0, ',', '.') }} </h2>
                         </div>
 
                         <!-- Bar Timer Hitung Mundur -->
@@ -94,11 +94,12 @@
 
                 <!-- Tombol Aksi QRIS -->
                 <div class="space-y-3 pt-2">
-                    <!-- Tombol Check Payment Status Diarahkan ke Halaman Sukses -->
-                    <a href="{{ route('payment.success') }}"
+                    <!-- Demo UI: belum terhubung ke payment gateway QRIS -->
+                    <button type="button"
+                        onclick="alert('QRIS belum terhubung ke payment gateway. Pesanan masih berstatus pending.')"
                         class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
                         Check payment status
-                    </a>
+                    </button>
                     <button type="button" onclick="alert('QR code berhasil diunduh!')"
                         class="w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
                         Download QR code
@@ -173,27 +174,30 @@
 
                 </div>
 
-                <div class="border-t border-gray-100 pt-4 space-y-2 text-xs">
-                    <div class="flex justify-between text-gray-500">
-                        <span>Subtotal</span>
-                        <span id="payment-subtotal" class="font-medium text-gray-900">
-                            Rp{{ number_format(session('order_summary.subtotal', 0), 0, ',', '.') }} </span>
-                    </div>
-                    <div class="flex justify-between text-gray-500">
-                        <span>Shipping</span>
-                        <span id="payment-shipping" class="font-medium text-gray-900">
-                            Rp{{ number_format(session('order_summary.shipping_cost', 0), 0, ',', '.') }} </span>
-                    </div>
-                    <div class="flex justify-between text-gray-500">
-                        <span>VAT (11% PPN)</span>
-                        <span class="font-medium text-gray-900">Included</span>
-                    </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>Subtotal</span>
+                    <span class="font-medium text-gray-900">
+                        Rp{{ number_format($subtotal, 0, ',', '.') }}
+                    </span>
+                </div>
+
+                <div class="flex justify-between text-gray-500">
+                    <span>Shipping</span>
+                    <span class="font-medium text-gray-900">
+                        Rp{{ number_format($shippingCost, 0, ',', '.') }}
+                    </span>
+                </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>PPN (11%)</span>
+                    <span class="font-medium text-gray-900">
+                        Rp{{ number_format($tax, 0, ',', '.') }}
+                    </span>
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 flex justify-between items-center">
                     <span class="text-sm font-bold text-gray-900">Total</span>
                     <span id="payment-total" class="text-base font-bold text-gray-900">
-                        Rp{{ number_format(session('order_summary.total', 0), 0, ',', '.') }}
+                        Rp{{ number_format($total, 0, ',', '.') }}
                     </span>
                 </div>
             </div>
@@ -208,77 +212,67 @@
     </footer>
 
     <!-- SCRIPT RENDER ORDER SUMMARY & TIMER 1 MENIT (15:00 -> 14:00) -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            startCountdown();
-        });
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const display = document.getElementById('countdown-timer');
+    const timerBar = document.getElementById('timer-bar');
 
+    if (!display) return;
 
-        container.innerHTML = cart.map(item => {
-            let hargaSatuan = parseInt(
-                String(item.harga).replace(/[^0-9]/g, '')
-            ) || 0;
+    // Batas waktu dihitung dari waktu order dibuat di server.
+    const orderCreatedAt = {{ $order->created_at->timestamp * 1000 }};
+    const expiryTime = orderCreatedAt + (15 * 60 * 1000);
 
-            let totalItemHarga = hargaSatuan * Number(item.qty);
+    function updateCountdown() {
+        const remaining = Math.max(
+            0,
+            Math.ceil((expiryTime - Date.now()) / 1000)
+        );
 
-            return `
-            <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
-                <div class="flex items-center gap-3">
-                    <img src="${item.gambar}"
-                        class="w-12 h-12 object-cover rounded border border-gray-200">
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
 
-                    <div>
-                        <p class="font-semibold text-gray-900">${item.nama}</p>
-                        <p class="text-[10px] text-gray-400">
-                            Color: ${item.warna} |
-                            Size: ${item.ukuran} |
-                            Qty: ${item.qty}
-                        </p>
-                    </div>
-                </div>
+        display.textContent =
+            String(minutes).padStart(2, '0') + ':' +
+            String(seconds).padStart(2, '0');
 
-                <span class="font-semibold text-gray-900">
-                    Rp${totalItemHarga.toLocaleString('id-ID')}
-                </span>
-            </div>
-        `;
-        }).join('');
+        if (timerBar) {
+            timerBar.style.width = ((remaining / 900) * 100) + '%';
         }
 
-        function startCountdown() {
-            let totalSeconds = 60; // Durasi 1 menit (60 detik) dari 15:00 ke 14:00
-            const display = document.getElementById('countdown-timer');
-            const timerBar = document.getElementById('timer-bar');
+        if (remaining <= 0) {
+            display.textContent = 'EXPIRED';
 
-            let interval = setInterval(() => {
-                if (totalSeconds < 0) {
-                    clearInterval(interval);
-                    // Langsung redirect ke halaman expired/gagal bayar
-                    window.location.href = "{{ route('payment.expired') }}";
-                    return;
-                }
+            const message = document.getElementById('payment-expired-message');
 
-                let minutes = Math.floor(totalSeconds / 60) + 14;
-                let seconds = totalSeconds % 60;
+            if (message) {
+                message.classList.remove('hidden');
+            }
 
-                let displayMin = minutes < 10 ? "0" + minutes : minutes;
-                let displaySec = seconds < 10 ? "0" + seconds : seconds;
+            const buttons = document.querySelectorAll(
+                '[data-payment-action]'
+            );
 
-                if (display) {
-                    display.textContent = `${displayMin}:${displaySec}`;
-                }
+            buttons.forEach(button => {
+                button.setAttribute('aria-disabled', 'true');
+                button.classList.add('opacity-50', 'pointer-events-none');
+            });
 
-                if (timerBar) {
-                    let percentage = (totalSeconds / 60) * 100;
-                    timerBar.style.width = percentage + '%';
-                }
-
-                totalSeconds--;
-            }, 1000);
+            return;
         }
-    </script>
 
+        setTimeout(updateCountdown, 1000);
+    }
+
+    updateCountdown();
+});
+</script>
+
+<p id="payment-expired-message"
+   class="hidden text-xs text-red-600 mt-2">
+    Waktu pembayaran telah berakhir. Silakan hubungi admin untuk langkah selanjutnya.
+</p>
 </body>
 
 </html>

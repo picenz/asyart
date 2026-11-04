@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $product['nama'] }} - ASYART.MERCH</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -75,15 +76,16 @@
 
                 <!-- Auth Navbar Desktop -->
                 <div class="hidden md:flex items-center gap-3">
-                    <a href="{{ route('cart.page') }}"
-                        class="relative hover:opacity-75 active:scale-90 transition duration-150 mr-2">
+                    <a href="{{ route('cart.page') }}" class="relative hover:opacity-75 transition duration-150 mr-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
+                        <!-- COUNTER JUMLAH BARIS ITEM UNIK -->
                         <span id="cart-count-desktop"
                             class="absolute -top-1 -right-2 text-[10px] bg-black text-white rounded-full w-4 h-4 flex items-center justify-center font-medium">0</span>
                     </a>
+
 
                     @guest
                         <a href="{{ route('login') }}"
@@ -798,47 +800,99 @@
             }
         }
 
-        function updateCartCountUI() {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            let totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-            const badgeDesktop = document.getElementById('cart-count-desktop');
-            const badgeMobile = document.getElementById('cart-count-mobile');
-            if (badgeDesktop) badgeDesktop.innerText = totalItems;
-            if (badgeMobile) badgeMobile.innerText = totalItems;
-        }
-
-        function addToBag() {
-            if (!selectedSize || maxStock <= 0) return;
-
-            const productName = "{{ $product['nama'] }}";
-            const productCat = "{{ $product['kategori'] }}";
-            const productPrice = "{{ $product['harga'] }}";
-            const productImg = selectedColor === 'Black' ? "{{ asset('images/' . $product['gambar_hitam']) }}" :
-                "{{ asset('images/' . $product['gambar_putih']) }}";
-
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            let existingItem = cart.find(item => item.nama === productName && item.warna === selectedColor && item
-                .ukuran === selectedSize);
-
-            if (existingItem) {
-                existingItem.qty = Math.min(maxStock, existingItem.qty + quantity);
-            } else {
-                cart.push({
-                    nama: productName,
-                    kategori: productCat,
-                    harga: productPrice,
-                    gambar: productImg,
-                    warna: selectedColor,
-                    ukuran: selectedSize,
-                    qty: quantity
+        async function updateCartCountUI() {
+            try {
+                const response = await fetch("{{ route('cart.count') }}", {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+
+                const badgeDesktop = document.getElementById('cart-count-desktop');
+                const badgeMobile = document.getElementById('cart-count-mobile');
+
+                if (badgeDesktop) {
+                    badgeDesktop.innerText = data.count;
+                }
+
+                if (badgeMobile) {
+                    badgeMobile.innerText = data.count;
+                }
+            } catch (error) {
+                console.error('Gagal mengambil jumlah varian keranjang:', error);
+            }
+        }
+        async function addToBag() {
+            if (!selectedSize || maxStock <= 0) {
+                alert('Pilih ukuran yang stoknya tersedia dulu!');
+                return;
             }
 
-    localStorage.setItem('cart', JSON.stringify(cart));
+            const btn = document.getElementById('add-to-bag-btn');
 
-    updateCartCountUI();
-    showToast();
-}
+            try {
+                btn.disabled = true;
+                btn.innerText = 'Adding...';
+
+                // Cari ID varian berdasarkan warna dan ukuran yang dipilih.
+                const variants = @json($product['variants'] ?? []);
+
+                const selectedVariant = variants.find(variant =>
+                    String(variant.color).toLowerCase() === String(selectedColor).toLowerCase() &&
+                    String(variant.size).toLowerCase() === String(selectedSize).toLowerCase()
+                );
+
+                if (!selectedVariant) {
+                    throw new Error('Varian produk tidak ditemukan.');
+                }
+
+                const response = await fetch(@json(route('cart.add')), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector(
+                            'meta[name="csrf-token"]'
+                        )?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        variant_id: selectedVariant.id,
+                        quantity: quantity
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        Object.values(result.errors || {}).flat().join('\n') ||
+                        result.message ||
+                        'Gagal menambahkan produk.'
+                    );
+                }
+
+                showToast();
+
+                // Perbarui jumlah badge jika elemen tersedia.
+                document.querySelectorAll(
+                    '#cart-count-desktop, #cart-count-mobile'
+                ).forEach(element => {
+                    element.innerText = result.count;
+                });
+
+            } catch (error) {
+                alert(error.message || 'Terjadi kesalahan saat menambahkan produk.');
+            } finally {
+                btn.disabled = false;
+                updateStockUI();
+            }
+        }
 
         function showToast() {
             let toast = document.getElementById('cart-toast');

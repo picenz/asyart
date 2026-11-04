@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
@@ -10,164 +11,190 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('checkout');
+        $items = CartItem::with(['product.images', 'variant'])
+            ->where('user_id', $request->user()->id)
+            ->get()
+            ->map(function ($cartItem) {
+                $product = $cartItem->product;
+                $variant = $cartItem->variant;
+                $image = $product?->images->firstWhere('is_primary', true)
+                    ?? $product?->images->first();
+
+                return [
+                    'id' => $cartItem->id,
+                    'product_id' => $cartItem->product_id,
+                    'variant_id' => $cartItem->product_variant_id,
+                    'nama' => $product?->name ?? 'Produk',
+                    'harga' => (float) ($variant?->price ?? 0),
+                    'gambar' => $image ? asset($image->image_path) : '',
+                    'warna' => $variant?->color ?? '',
+                    'ukuran' => $variant?->size ?? '',
+                    'qty' => $cartItem->quantity,
+                    'stock' => $variant?->stock ?? 0,
+                ];
+            });
+
+        if ($items->isEmpty()) {
+            return redirect()->route('cart.page')
+                ->with('error', 'Keranjang belanja masih kosong.');
+        }
+
+        return view('checkout', compact('items'));
     }
 
     public function store(Request $request)
     {
-        // 1. Validasi data checkout
-        $validatedData = $request->validate([
+        $data = $request->validate([
             'email' => 'required|email|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'address' => 'required|string',
+            'address' => 'required|string|max:2000',
             'apartment' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'province' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'delivery_method' => 'required|in:Standard delivery,Express delivery',
-            'cart_data' => 'required|json',
         ]);
 
-        // 2. Ambil data cart dari frontend
-        $cart = json_decode($validatedData['cart_data'], true);
+        $userId = $request->user()->id;
+        $shippingCost = $data['delivery_method'] === 'Express delivery' ? 20000 : 0;
 
-        if (!is_array($cart) || count($cart) === 0) {
-            throw ValidationException::withMessages([
-                'cart_data' => 'Keranjang belanja kosong.',
-            ]);
-        }
+        $order = DB::transaction(function () use ($userId, $data, $shippingCost) {
+            $cartItems = CartItem::where('user_id', $userId)->lockForUpdate()->get();
 
-        // 3. Tentukan ongkir dari server
-        $shippingCost = $validatedData['delivery_method'] === 'Express delivery'
-            ? 20000
-            : 0;
-        $tax = round($subtotal * 0.11);
-        $total = $subtotal + $shippingCost + $tax;
+            if ($cartItems->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'cart' => 'Keranjang belanja masih kosong.',
+                ]);
+            }
 
-        // 4. Simpan order dan detail order ke database
-        $result = DB::transaction(function () use (
-            $request,
-            $validatedData,
-            $cart,
-            $shippingCost
-        ) {
             $subtotal = 0;
-            $orderItems = [];
+            $orderLines = [];
+            $lockedVariants = [];
 
-            foreach ($cart as $item) {
-                if (
-                    empty($item['product_id']) ||
-                    empty($item['variant_id']) ||
-                    !isset($item['qty']) ||
-                    !is_numeric($item['qty']) ||
-                    (int) $item['qty'] < 1
-                ) {
-                    throw ValidationException::withMessages([
-                        'cart_data' => 'Data keranjang tidak valid.',
-                    ]);
-                }
-
-                // Ambil variant dari database
+            foreach ($cartItems as $cartItem) {
                 $variant = ProductVariant::with('product')
-                    ->where('id', $item['variant_id'])
-                    ->where('product_id', $item['product_id'])
-                    ->where('is_active', true)
+                    ->whereKey($cartItem->product_variant_id)
                     ->lockForUpdate()
                     ->first();
 
-                if (
-                    !$variant ||
-                    !$variant->product ||
-                    !$variant->product->is_active
-                ) {
+                if (!$variant || !$variant->is_active || !$variant->product?->is_active) {
                     throw ValidationException::withMessages([
-                        'cart_data' => 'Salah satu produk sudah tidak tersedia.',
+                        'cart' => 'Ada produk yang sudah tidak tersedia. Periksa keranjang kembali.',
                     ]);
                 }
 
-                $quantity = (int) $item['qty'];
-
-                // Cek ketersediaan stok
-                if ($variant->stock < $quantity) {
+                $qty = (int) $cartItem->quantity;
+                if ($qty < 1 || $qty > $variant->stock) {
                     throw ValidationException::withMessages([
-                        'cart_data' => 'Stok ' . $variant->product->name .
-                            ' (' . $variant->color . ' - ' . $variant->size .
-                            ') tidak mencukupi.',
+                        'cart' => 'Stok produk tidak cukup untuk jumlah yang diminta.',
                     ]);
                 }
 
-                // Harga diambil dari database, bukan localStorage
                 $price = (float) $variant->price;
-                $itemSubtotal = $price * $quantity;
+                $lineSubtotal = $price * $qty;
+                $subtotal += $lineSubtotal;
 
-                $subtotal += $itemSubtotal;
-
-                $orderItems[] = [
+                $orderLines[] = [
                     'product_id' => $variant->product_id,
                     'product_variant_id' => $variant->id,
                     'product_name' => $variant->product->name,
                     'color' => $variant->color,
                     'size' => $variant->size,
-                    'quantity' => $quantity,
+                    'quantity' => $qty,
                     'price' => $price,
-                    'subtotal' => $itemSubtotal,
-                    'total_price' => $total
+                    'subtotal' => $lineSubtotal,
                 ];
+                $lockedVariants[] = [$variant, $qty];
             }
 
-            // 5. Hitung total pembayaran
-            $totalPayment = $subtotal + $shippingCost;
+            // PPN 11% dihitung di server; nilai dari browser tidak dipercaya.
+            $tax = (int) round($subtotal * 0.11);
+            $total = $subtotal + $shippingCost + $tax;
 
-            // 6. Buat data order
             $order = Order::create([
-                'user_id' => $request->user()->id,
-                'email' => $validatedData['email'],
-                'first_name' => $validatedData['first_name'],
-                'last_name' => $validatedData['last_name'],
-                'address' => $validatedData['address'],
-                'apartment' => $validatedData['apartment'] ?? null,
-                'city' => $validatedData['city'],
-                'postal_code' => $validatedData['postal_code'],
-                'province' => $validatedData['province'],
-                'phone' => $validatedData['phone'],
-                'delivery_method' => $validatedData['delivery_method'],
-                'total_price' => $totalPayment,
+                'user_id' => $userId,
+                'email' => $data['email'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'address' => $data['address'],
+                'apartment' => $data['apartment'] ?? null,
+                'city' => $data['city'],
+                'postal_code' => $data['postal_code'],
+                'province' => $data['province'],
+                'phone' => $data['phone'],
+                'delivery_method' => $data['delivery_method'],
+                'total_price' => $total,
                 'status' => 'pending',
             ]);
 
-            // 7. Simpan setiap item ke order_items
-            foreach ($orderItems as $orderItem) {
-                $order->items()->create($orderItem);
+            foreach ($orderLines as $line) {
+                $order->items()->create($line);
             }
 
-            // Kembalikan hasil transaction
-            return [
-                'order' => $order,
-                'subtotal' => $subtotal,
-            ];
+            foreach ($lockedVariants as [$variant, $qty]) {
+                $variant->decrement('stock', $qty);
+            }
+
+            CartItem::where('user_id', $userId)->delete();
+
+            return $order;
         });
 
-        // 8. Ambil hasil transaction
-        $order = $result['order'];
-        $subtotal = $result['subtotal'];
+        session(['asyart_pending_order_id' => $order->id]);
 
-        // 9. Simpan ringkasan pembayaran ke session
-        session([
-            'checkout_data' => $validatedData,
-            'order_summary' => [
-                'order_id' => $order->id,
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'tax' => $tax,
-                'total' => $total,
-            ],
-        ]);
-
-        // 10. Arahkan ke halaman pembayaran
         return redirect()->route('payment.page');
+    }
+
+public function paymentPage(Request $request)
+{
+    $orderId = session('asyart_pending_order_id');
+
+    abort_unless($orderId, 404);
+
+    $order = Order::with('items')
+        ->where('user_id', $request->user()->id)
+        ->findOrFail($orderId);
+
+    // Hitung ulang berdasarkan item order yang tersimpan di database.
+    $subtotal = (float) $order->items->sum('subtotal');
+
+    $shippingCost = $order->delivery_method === 'Express delivery'
+        ? 20000
+        : 0;
+
+    // Total order yang tersimpan menjadi acuan agar summary konsisten.
+    $total = (float) $order->total_price;
+    $tax = max(0, $total - $subtotal - $shippingCost);
+
+    $expiresAt = $order->created_at->copy()->addMinutes(15);
+    $isExpired = now()->greaterThanOrEqualTo($expiresAt);
+
+    return view('payment', compact(
+        'order',
+        'subtotal',
+        'shippingCost',
+        'tax',
+        'total',
+        'expiresAt',
+        'isExpired'
+    ));
+}
+
+
+    /**
+     * DEMO ONLY: tombol ini bukan konfirmasi pembayaran QRIS sungguhan.
+     * Hapus/nonaktifkan route ini sebelum production.
+     */
+    public function demoPaymentSuccess(Request $request, Order $order)
+    {
+        abort_unless($order->user_id === $request->user()->id, 404);
+
+        // Sengaja tidak mengubah status menjadi paid: tidak ada verifikasi gateway.
+        return redirect()->route('payment.page')
+            ->with('warning', 'Demo saja: pembayaran belum diverifikasi oleh payment gateway.');
     }
 }

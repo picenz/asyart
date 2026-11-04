@@ -78,8 +78,9 @@
                         <label for="password" class="block text-xs text-gray-600 font-medium">Password</label>
                         <input id="password" type="password" name="password" required autocomplete="new-password"
                             class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
-                        <x-input-error :messages="$errors->get('password')" class="mt-1" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
+
 
                     <!-- Confirm Password -->
                     <div class="space-y-1">
@@ -88,7 +89,7 @@
                         <input id="password_confirmation" type="password" name="password_confirmation" required
                             autocomplete="new-password"
                             class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
-                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
 
                     <!-- Tombol Sign Up -->

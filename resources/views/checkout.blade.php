@@ -98,13 +98,10 @@
                 </div>
             @else
                 <!-- 2. TAMPILAN JIKA SUDAH LOGIN (FORM ALAMAT, VALIDASI WAJIB & QRIS) -->
-                <form action="{{ route('checkout.process') }}" method="POST" class="space-y-8"
-                    onsubmit="prepareCartPayload(event)">
+                <form action="{{ route('checkout.process') }}" method="POST" class="space-y-8">
                     @csrf
 
                     <!-- HIDDEN INPUT UNTUK MENGIRIM DATA KERANJANG & ONGKIR KE BACKEND -->
-                    <input type="hidden" name="cart_data" id="input-cart-data">
-                    <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
 
                     <div class="flex items-center gap-2 text-xs text-gray-400">
                         <a href="{{ route('cart.page') }}" class="hover:underline">Bag</a>
@@ -198,8 +195,14 @@
                         <div class="border border-black rounded-lg bg-white p-5 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <input type="radio" name="payment_method" checked class="accent-black w-4 h-4">
-                                    <span class="text-xs font-bold text-gray-900">QRIS</span>
+<input
+    type="radio"
+    name="payment_method"
+    value="qris"
+    checked
+    required
+    class="accent-black w-4 h-4"
+>                                    <span class="text-xs font-bold text-gray-900">QRIS</span>
                                 </div>
                                 <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor"
                                     stroke-width="1.5" viewBox="0 0 24 24">
@@ -276,120 +279,126 @@
         &copy; 2026 ASYART.MERCH. All rights reserved.
     </footer>
 
-    <!-- SCRIPT -->
+
     <script>
+        let currentSubtotal = 0;
+        let currentShippingCost = 0;
 
-let currentSubtotal = 0;
-let currentShippingCost = 0;
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCheckoutSummary();
+        });
 
-document.addEventListener('DOMContentLoaded', function () {
-    renderCheckoutSummary();
-
+        // Dipanggil oleh tombol Continue as guest.
         function proceedAsGuest() {
-            let email = document.getElementById('guest-email').value;
-            if (!email) {
-                alert('Masukkan email terlebih dahulu, bro!');
+            const emailInput = document.getElementById('guest-email');
+            const email = emailInput.value.trim();
+
+            if (!email || !emailInput.checkValidity()) {
+                alert('Masukkan alamat email yang valid dulu, ya!');
+                emailInput.focus();
                 return;
             }
-            alert('Melanjutkan sebagai guest dengan email: ' + email);
-            window.location.reload();
+
+            // Guest checkout belum tersedia di form backend saat ini.
+            alert(
+                'Fitur guest checkout belum terhubung ke proses pemesanan. ' +
+                'Silakan login terlebih dahulu untuk melanjutkan.'
+            );
+
+            window.location.href = "{{ route('login') }}";
         }
 
-        // Fungsi untuk membungkus data keranjang ke hidden input sebelum form dikirim ke BE
-        function prepareCartPayload(event) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            document.getElementById('input-cart-data').value = JSON.stringify(cart);
+        // Data keranjang dikirim oleh CheckoutController dari database.
+        const checkoutItems = @json($items);
 
-            // Catatan buat temen BE: setelah order sukses diproses di controller,
-            // pastikan backend nge-redirect ke route('payment.success')
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function (char) {
+                return ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                    '"': '&quot;', "'": '&#039;'
+                })[char];
+            });
         }
 
-function renderCheckoutSummary() {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        function renderCheckoutSummary() {
+            const container = document.getElementById('checkout-items-list');
+            const subtotalEl = document.getElementById('summary-subtotal');
+            if (!container) return;
 
-    const container = document.getElementById('checkout-items-list');
-    const subtotalEl = document.getElementById('summary-subtotal');
+            currentSubtotal = 0;
+            const cart = Array.isArray(checkoutItems) ? checkoutItems : [];
 
-    if (!container) return;
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>';
+                if (subtotalEl) subtotalEl.innerText = 'Rp0';
+                updateTotalDisplay();
+                return;
+            }
 
-    if (cart.length === 0) {
-        container.innerHTML =
-            '<p class="text-xs text-gray-400 text-center py-4">Keranjang kosong.</p>';
+            container.innerHTML = cart.map(item => {
+                const price = Number(item.harga) || 0;
+                const qty = Math.max(1, Number(item.qty) || 1);
+                const lineTotal = price * qty;
+                currentSubtotal += lineTotal;
+                const image = escapeHtml(item.gambar || '');
+                const name = escapeHtml(item.nama || 'Produk');
+                const color = escapeHtml(item.warna || '-');
+                const size = escapeHtml(item.ukuran || '-');
 
-        currentSubtotal = 0;
-        updateTotalDisplay();
-        return;
-    }
-
-    currentSubtotal = 0;
-
-    container.innerHTML = cart.map(item => {
-        const hargaSatuan = Number(
-            String(item.price ?? item.harga ?? 0).replace(/[^0-9]/g, '')
-        );
-
-        const qty = Number(item.qty || 1);
-        const totalItemHarga = hargaSatuan * qty;
-
-        currentSubtotal += totalItemHarga;
-
-        const nama = item.name ?? item.nama ?? 'Produk';
-        const gambar = item.image ?? item.gambar ?? '';
-        const warna = item.color ?? item.warna ?? '-';
-        const ukuran = item.size ?? item.ukuran ?? '-';
-
-        return `
-            <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
-                <div class="flex items-center gap-3">
-                    <img src="${gambar}"
-                        class="w-12 h-12 object-cover rounded border border-gray-200">
-
-                    <div>
-                        <p class="font-semibold text-gray-900">${nama}</p>
-                        <p class="text-[10px] text-gray-400">
-                            Color: ${warna} | Size: ${ukuran} | Qty: ${qty}
-                        </p>
-                    </div>
-                </div>
-
-                <span class="font-semibold text-gray-900">
-                    Rp${totalItemHarga.toLocaleString('id-ID')}
-                </span>
-            </div>
-        `;
-    }).join('');
+                return `
+                    <div class="flex items-center justify-between gap-3 text-xs border-b border-gray-50 pb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <img src="${image}" alt="${name}" class="w-12 h-12 object-cover rounded border border-gray-200">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-900">${name}</p>
+                                <p class="text-[10px] text-gray-400">Color: ${color} | Size: ${size} | Qty: ${qty}</p>
+                            </div>
+                        </div>
+                        <span class="font-semibold text-gray-900 whitespace-nowrap">Rp${lineTotal.toLocaleString('id-ID')}</span>
+                    </div>`;
+            }).join('');
 
             if (subtotalEl) subtotalEl.innerText = `Rp${currentSubtotal.toLocaleString('id-ID')}`;
             updateTotalDisplay();
         }
 
-function updateShipping(cost, labelText) {
-    currentShippingCost = Number(cost);
+        // Update ongkir saat metode pengiriman diganti.
+        function updateShipping(cost, labelText) {
+            currentShippingCost = Number(cost) || 0;
 
             const shippingEl = document.getElementById('summary-shipping');
+
             if (shippingEl) shippingEl.innerText = labelText;
 
-            const hiddenInput = document.getElementById('input-shipping-cost');
-            if (hiddenInput) hiddenInput.value = cost;
+            updateTotalDisplay();
+        }
 
-    updateTotalDisplay();
-}
+        // Update total checkout dan tombol pembayaran.
 
-function updateTotalDisplay() {
-    const grandTotal = currentSubtotal + currentShippingCost;
+        function updateTotalDisplay() {
+            const tax = Math.round(currentSubtotal * 0.11);
+            const grandTotal = currentSubtotal + currentShippingCost + tax;
 
-    const totalEl = document.getElementById('summary-total');
-    const btnTotalEl = document.getElementById('btn-total-price');
+            const formatRupiah = (angka) =>
+                `Rp${angka.toLocaleString('id-ID')}`;
 
-    if (totalEl) {
-        totalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
-    }
+            const subtotalEl = document.getElementById('summary-subtotal');
+            const shippingEl = document.getElementById('summary-shipping');
+            const totalEl = document.getElementById('summary-total');
+            const btnTotalEl = document.getElementById('btn-total-price');
 
-    if (btnTotalEl) {
-        btnTotalEl.innerText = `Rp${grandTotal.toLocaleString('id-ID')}`;
-    }
-}
+            if (subtotalEl) {
+                subtotalEl.innerText = formatRupiah(currentSubtotal);
+            }
 
+            if (totalEl) {
+                totalEl.innerText = formatRupiah(grandTotal);
+            }
+
+            if (btnTotalEl) {
+                btnTotalEl.innerText = formatRupiah(grandTotal);
+            }
+        }
     </script>
 
 </body>
