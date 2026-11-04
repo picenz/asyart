@@ -5,11 +5,6 @@
 
         <!-- HEADER & BACK BUTTON -->
         <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-xs text-gray-500">
-                <a href="{{ route('admin.qris.index') }}" class="hover:underline">QRIS Transactions</a>
-                <span>/</span>
-                <span class="text-gray-900 font-medium">Transaction Detail</span>
-            </div>
             <a href="{{ route('admin.qris.index') }}"
                 class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm">
                 ← Back
