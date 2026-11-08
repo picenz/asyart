@@ -94,9 +94,6 @@ class ProfileController extends Controller
     /**
      * Display detailed status and invoice of a specific order.
      */
-    /**
-     * Display detailed status and invoice of a specific order.
-     */
     public function orderDetail($id)
     {
         $order = Orders::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
@@ -107,5 +104,46 @@ class ProfileController extends Controller
         }
 
         return view('profile.order-detail', compact('order'));
+    }
+
+    /**
+     * Menampilkan halaman form tambah alamat baru
+     */
+    public function create()
+    {
+        return view('profile.addresses-create');
+    }
+
+    /**
+     * Menyimpan data alamat baru dari form ke database
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient_name' => 'required|string|max:255',
+            'address_label'  => 'required|string|max:100',
+            'street_address' => 'required|string',
+            'city'           => 'required|string|max:100',
+            'postal_code'    => 'required|string|max:20',
+            'phone_number'   => 'required|string|max:20',
+        ]);
+
+        // Cek apakah user mencentang 'set as default'
+        if ($request->has('is_default')) {
+            // Jika ada alamat lain yang default, ubah jadi false dulu (opsional sesuai kebutuhan tabel DB)
+            if (method_exists($request->user(), 'addresses')) {
+                $request->user()->addresses()->update(['is_default' => false]);
+            }
+            $validated['is_default'] = true;
+        } else {
+            $validated['is_default'] = false;
+        }
+
+        // Simpan ke database melalui relasi user (pastikan model User punya relasi addresses)
+        if (method_exists($request->user(), 'addresses')) {
+            $request->user()->addresses()->create($validated);
+        }
+
+        return redirect()->route('profile.addresses')->with('success', 'Alamat baru berhasil ditambahkan!');
     }
 }

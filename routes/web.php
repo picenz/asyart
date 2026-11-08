@@ -113,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/products/{id}/edit', function () {
             return view('admin.products.edit');
-        })->name('products.edit');
+        })->name('admin.products.edit');
 
         // Rute Hapus Produk
         Route::delete('/products/{id}', function ($id) {
@@ -126,7 +126,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('qris.index');
 
         Route::get('/qris/{id}', function ($id) {
-            // Nanti bagian backend bisa menyesuaikan dengan Controller atau mengambil data dari model Orders
             return view('admin.qris-detail');
         })->name('qris.detail');
 
@@ -154,9 +153,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/orders', [ProfileController::class, 'orders'])->name('profile.orders');
     Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])->name('profile.order.detail');
 
+    // Halaman list addresses utama
     Route::get('/profile/addresses', function () {
         return view('addresses');
     })->name('profile.addresses');
+
+    // Rute Add New Address (Sudah bersih dan nyambung ke method create() & store() di ProfileController)
+    Route::get('/profile/addresses/create', [ProfileController::class, 'create'])->name('profile.addresses.create');
+    Route::post('/profile/addresses', [ProfileController::class, 'store'])->name('profile.addresses.store');
 });
 
 // --- RUTE LOGOUT MANUAL ---
