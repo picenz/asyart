@@ -59,9 +59,10 @@
                         Addresses
                     </a>
                     <div class="pt-2 border-t border-white/20">
-                        <form method="POST" action="{{ route('logout') }}">
+                        <!-- Form Sign Out dengan pemicu Pop-up Global -->
+                        <form id="logout-form" method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit"
+                            <button type="button" onclick="openLogoutModal()"
                                 class="w-full text-left text-red-300 hover:text-red-200 px-3 py-2 rounded transition">
                                 Sign out
                             </button>
@@ -153,7 +154,7 @@
 
                 <div class="border-t border-gray-100"></div>
 
-                <!-- SECTION 2: UPDATE PASSWORD (DENGAN TOMBOL MATA & POSISI TOMBOL DI KIRI) -->
+                <!-- SECTION 2: UPDATE PASSWORD -->
                 <div class="space-y-4">
                     <h4 class="text-xs font-semibold font-serif text-gray-900 uppercase tracking-wider">2. Update
                         Password</h4>
@@ -231,7 +232,7 @@
                             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-1" />
                         </div>
 
-                        <!-- Tombol Update di Kiri & Link Forgot Password di Kanan -->
+                        <!-- Tombol Update & Forgot Password -->
                         <div class="flex items-center justify-between pt-1">
                             <button type="submit"
                                 class="bg-black text-white text-xs px-5 py-2.5 rounded font-medium hover:bg-gray-800 active:scale-95 transition">
@@ -278,8 +279,7 @@
                         Once your account is deleted, all of its resources and data will be permanently deleted.
                     </p>
 
-                    <form method="POST" action="{{ route('profile.destroy') }}"
-                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun ini secara permanen?');"
+                    <form id="delete-account-form" method="POST" action="{{ route('profile.destroy') }}"
                         class="space-y-3">
                         @csrf
                         @method('delete')
@@ -290,10 +290,13 @@
                             <input id="delete_password" type="password" name="password" placeholder="Password"
                                 required
                                 class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-red-600 transition">
-                            <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-1" />
+                            <div class="hidden">
+                                <x-input-error :messages="$errors->userDeletion->get('password')" />
+                            </div>
                         </div>
 
-                        <button type="submit"
+                        <!-- Tombol memicu pop-up konfirmasi -->
+                        <button type="button" onclick="openDeleteModal()"
                             class="bg-red-600 text-white text-xs px-5 py-2.5 rounded font-medium hover:bg-red-700 active:scale-95 transition">
                             Delete Account
                         </button>
@@ -305,7 +308,98 @@
 
     </div>
 
-    <!-- SCRIPT TOGGLE IKON MATA PASSWORD -->
+    <!-- ELEMEN POP-UP MODAL KONFIRMASI DELETE ACCOUNT -->
+    <div id="delete-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center space-y-4">
+            <div
+                class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                !
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus Akun</h3>
+            <p class="text-sm text-gray-600">
+                Apakah lu yakin ingin menghapus akun ini secara permanen, cuy? Semua data dan informasi terkait akan
+                hilang selamanya!
+            </p>
+            <div class="flex space-x-3 pt-2">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="w-1/2 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Batal
+                </button>
+                <button type="button" onclick="submitDeleteForm()"
+                    class="w-1/2 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ELEMEN POP-UP PERINGATAN JIKA PASSWORD DELETE KOSONG -->
+    <div id="warning-popup-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center space-y-4">
+            <div
+                class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                !
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Peringatan</h3>
+            <p class="text-sm text-gray-600">
+                Harap masukkan password terlebih dahulu untuk konfirmasi penghapusan akun, cuy!
+            </p>
+            <button onclick="closeWarningModal()"
+                class="w-full py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+                Tutup & Isi Password
+            </button>
+        </div>
+    </div>
+
+    <!-- ELEMEN POP-UP KONFIRMASI SIGN OUT -->
+    <div id="logout-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center space-y-4">
+            <div
+                class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                !
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">Konfirmasi Sign Out</h3>
+            <p class="text-sm text-gray-600">
+                Apakah lu yakin ingin keluar dari akun ini, cuy? Sesi lu bakal diakhiri.
+            </p>
+            <div class="flex space-x-3 pt-2">
+                <button type="button" onclick="closeLogoutModal()"
+                    class="w-1/2 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Batal
+                </button>
+                <button type="button" onclick="submitLogoutForm()"
+                    class="w-1/2 py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+                    Ya, Keluar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP OTOMATIS JIKA ADA ERROR PASSWORD DELETE (MISAL: PASSWORD SALAH) -->
+    @if ($errors->userDeletion->has('password'))
+        <div id="error-popup-modal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center space-y-4">
+                <div
+                    class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                    ✕
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Gagal Menghapus Akun</h3>
+                <p class="text-sm text-gray-600">
+                    {{ $errors->userDeletion->first('password') }}
+                </p>
+                <button onclick="document.getElementById('error-popup-modal').style.display='none'"
+                    class="w-full py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+                    Tutup & Coba Lagi
+                </button>
+            </div>
+        </div>
+    @endif
+
+    <!-- SCRIPT JAVASCRIPT LENGKAP (TOGGLE PASSWORD & MODAL POP-UP) -->
     <script>
         function togglePassword(fieldId, iconId) {
             const inputField = document.getElementById(fieldId);
@@ -320,6 +414,42 @@
                 icon.innerHTML =
                     `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
             }
+        }
+
+        // Fungsi kontrol Pop-up Modal Delete Account
+        function openDeleteModal() {
+            const passwordInput = document.getElementById('delete_password');
+            if (!passwordInput.value.trim()) {
+                document.getElementById('warning-popup-modal').classList.remove('hidden');
+                passwordInput.focus();
+                return;
+            }
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        function closeWarningModal() {
+            document.getElementById('warning-popup-modal').classList.add('hidden');
+        }
+
+        function submitDeleteForm() {
+            document.getElementById('delete-account-form').submit();
+        }
+
+        // Fungsi kontrol Pop-up Modal Sign Out
+        function openLogoutModal() {
+            document.getElementById('logout-modal').classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logout-modal').classList.add('hidden');
+        }
+
+        function submitLogoutForm() {
+            document.getElementById('logout-form').submit();
         }
     </script>
 
