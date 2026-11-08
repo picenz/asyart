@@ -24,12 +24,10 @@ class OrderItem extends Model
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];
-
-    public function order(): BelongsTo
-    {
-        return $this->belongsTo(Order::class);
-    }
-
+public function order(): BelongsTo
+{
+    return $this->belongsTo(Orders::class, 'order_id');
+}
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

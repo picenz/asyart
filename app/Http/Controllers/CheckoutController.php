@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
-use App\Models\Order;
+use App\Models\Orders;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -60,10 +60,14 @@ class CheckoutController extends Controller
         ]);
 
         $userId = $request->user()->id;
-        $shippingCost = $data['delivery_method'] === 'Express delivery' ? 20000 : 0;
+        $shippingCost = $data['delivery_method'] === 'Express delivery'
+            ? 20000
+            : 0;
 
         $order = DB::transaction(function () use ($userId, $data, $shippingCost) {
-            $cartItems = CartItem::where('user_id', $userId)->lockForUpdate()->get();
+            $cartItems = CartItem::where('user_id', $userId)
+                ->lockForUpdate()
+                ->get();
 
             if ($cartItems->isEmpty()) {
                 throw ValidationException::withMessages([
@@ -81,13 +85,18 @@ class CheckoutController extends Controller
                     ->lockForUpdate()
                     ->first();
 
-                if (!$variant || !$variant->is_active || !$variant->product?->is_active) {
+                if (
+                    !$variant ||
+                    !$variant->is_active ||
+                    !$variant->product?->is_active
+                ) {
                     throw ValidationException::withMessages([
                         'cart' => 'Ada produk yang sudah tidak tersedia. Periksa keranjang kembali.',
                     ]);
                 }
 
                 $qty = (int) $cartItem->quantity;
+
                 if ($qty < 1 || $qty > $variant->stock) {
                     throw ValidationException::withMessages([
                         'cart' => 'Stok produk tidak cukup untuk jumlah yang diminta.',
@@ -108,14 +117,14 @@ class CheckoutController extends Controller
                     'price' => $price,
                     'subtotal' => $lineSubtotal,
                 ];
+
                 $lockedVariants[] = [$variant, $qty];
             }
 
-            // PPN 11% dihitung di server; nilai dari browser tidak dipercaya.
             $tax = (int) round($subtotal * 0.11);
             $total = $subtotal + $shippingCost + $tax;
 
-            $order = Order::create([
+            $order = Orders::create([
                 'user_id' => $userId,
                 'email' => $data['email'],
                 'first_name' => $data['first_name'],
@@ -146,55 +155,58 @@ class CheckoutController extends Controller
 
         session(['asyart_pending_order_id' => $order->id]);
 
-        return redirect()->route('payment.page');
+        return redirect()->route('payment');
     }
 
-public function paymentPage(Request $request)
+    public function paymentPage(Request $request)
+    {
+        $orderId = session('asyart_pending_order_id');
+
+        abort_unless($orderId, 404);
+
+        $order = Orders::with('items')
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($orderId);
+
+        $subtotal = (float) $order->items->sum('subtotal');
+
+        $shippingCost = $order->delivery_method === 'Express delivery'
+            ? 20000
+            : 0;
+
+        $total = (float) $order->total_price;
+        $tax = max(0, $total - $subtotal - $shippingCost);
+
+        $expiresAt = $order->created_at->copy()->addMinutes(15);
+        $isExpired = now()->greaterThanOrEqualTo($expiresAt);
+
+        return view('payment', compact(
+            'order',
+            'subtotal',
+            'shippingCost',
+            'tax',
+            'total',
+            'expiresAt',
+            'isExpired'
+        ));
+    }
+
+    /**
+     * Demo only. Ini bukan verifikasi pembayaran QRIS sungguhan.
+     */
+   public function demoPaymentSuccess(Request $request)
 {
     $orderId = session('asyart_pending_order_id');
 
     abort_unless($orderId, 404);
 
-    $order = Order::with('items')
-        ->where('user_id', $request->user()->id)
+    Orders::where('user_id', $request->user()->id)
         ->findOrFail($orderId);
 
-    // Hitung ulang berdasarkan item order yang tersimpan di database.
-    $subtotal = (float) $order->items->sum('subtotal');
-
-    $shippingCost = $order->delivery_method === 'Express delivery'
-        ? 20000
-        : 0;
-
-    // Total order yang tersimpan menjadi acuan agar summary konsisten.
-    $total = (float) $order->total_price;
-    $tax = max(0, $total - $subtotal - $shippingCost);
-
-    $expiresAt = $order->created_at->copy()->addMinutes(15);
-    $isExpired = now()->greaterThanOrEqualTo($expiresAt);
-
-    return view('payment', compact(
-        'order',
-        'subtotal',
-        'shippingCost',
-        'tax',
-        'total',
-        'expiresAt',
-        'isExpired'
-    ));
+    return redirect()->route('payment')
+        ->with(
+            'warning',
+            'Demo saja: pembayaran belum diverifikasi oleh payment gateway.'
+        );
 }
-
-
-    /**
-     * DEMO ONLY: tombol ini bukan konfirmasi pembayaran QRIS sungguhan.
-     * Hapus/nonaktifkan route ini sebelum production.
-     */
-    public function demoPaymentSuccess(Request $request, Order $order)
-    {
-        abort_unless($order->user_id === $request->user()->id, 404);
-
-        // Sengaja tidak mengubah status menjadi paid: tidak ada verifikasi gateway.
-        return redirect()->route('payment.page')
-            ->with('warning', 'Demo saja: pembayaran belum diverifikasi oleh payment gateway.');
-    }
 }

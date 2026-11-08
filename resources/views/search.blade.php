@@ -18,7 +18,7 @@
 
             <!-- SEARCH BAR DI NAVBAR -->
             <div class="hidden md:block w-[400px] relative">
-                <form action="{{ route('search.page') }}" method="GET" class="relative flex items-center">
+                <form action="{{ route('search') }}" method="GET" class="relative flex items-center">
                     <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -47,7 +47,7 @@
 
     <!-- SEARCH BAR KHUSUS MOBILE DI BAWAH NAVBAR -->
     <div class="px-4 py-2 md:hidden bg-white border-b border-gray-100">
-        <form action="{{ route('search.page') }}" method="GET" class="w-full relative">
+        <form action="{{ route('search') }}" method="GET" class="w-full relative">
             <div class="relative flex items-center">
                 <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@
             @foreach ($results as $item)
                 <div class="group produk-item space-y-2">
 
-                    <a href="{{ route('product.detail', $item['id']) }}"
+                    <a href="{{ route('product.show', $item['id']) }}"
                         class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200 block">
 
                         <img src="{{ asset('images/' . $item['gambar_hitam']) }}"
@@ -92,7 +92,7 @@
                     </a>
 
                     <div>
-                        <a href="{{ route('product.detail', $item['id']) }}" class="block">
+                        <a href="{{ route('product.show', $item['id']) }}" class="block">
                             <h4 class="text-xs font-medium text-gray-900 group-hover:underline">
                                 {{ $item['nama'] }}
                             </h4>
@@ -156,7 +156,7 @@
                     @foreach ($recommendations as $item)
                         <div class="group space-y-2">
 
-                            <a href="{{ route('product.detail', $item['id']) }}"
+                            <a href="{{ route('product.show', $item['id']) }}"
                                 class="aspect-square bg-gray-100 rounded-md overflow-hidden border border-gray-200 block">
 
                                 <img src="{{ asset('images/' . $item['gambar_hitam']) }}"
@@ -165,7 +165,7 @@
                             </a>
 
                             <div>
-                                <a href="{{ route('product.detail', $item['id']) }}">
+                                <a href="{{ route('product.show', $item['id']) }}">
                                     <h4 class="text-xs font-medium text-gray-900 group-hover:underline">
                                         {{ $item['nama'] }}
                                     </h4>

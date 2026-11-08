@@ -93,25 +93,29 @@
                 </div>
 
                 <!-- Tombol Aksi QRIS -->
-                <div class="space-y-3 pt-2">
-                    <!-- Demo UI: belum terhubung ke payment gateway QRIS -->
-                    <button type="button"
-                        onclick="alert('QRIS belum terhubung ke payment gateway. Pesanan masih berstatus pending.')"
-                        class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
-                        Check payment status
-                    </button>
-                    <button type="button" onclick="alert('QR code berhasil diunduh!')"
-                        class="w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
-                        Download QR code
-                    </button>
-                </div>
+<div class="space-y-3 pt-2">
+    <button type="button"
+        data-payment-action
+        onclick="alert('Pembayaran belum dapat diverifikasi otomatis. Pesanan masih berstatus pending.')"
+        class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
+        Check payment status
+    </button>
 
-                <p class="text-[10px] text-gray-400 text-center">Payment is confirmed automatically — no need to refresh
-                    this page.</p>
-            </div>
+    <button type="button"
+        data-payment-action
+        onclick="alert('QR code demo belum dapat diunduh.')"
+        class="w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
+        Download QR code
+    </button>
+</div>
 
+<p class="text-[10px] text-gray-400 text-center">
+    Payment status is pending until verified by the payment gateway.
+</p>
             <!-- Panduan How to Pay -->
             <div class="space-y-3 pt-4 border-t border-gray-200">
+
+                <p class="text-[11px]">Wait for payment verification from the payment gateway.</p>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">How to pay</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
                     <div class="flex items-start gap-2.5">

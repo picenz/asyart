@@ -11,39 +11,54 @@ use Illuminate\Validation\ValidationException;
 class CartController extends Controller
 {
 
-public function index(Request $request)
-{
-    $items = CartItem::with([
-        'product.images',
-        'variant',
-    ])
-        ->where('user_id', $request->user()->id)
-        ->get()
-        ->map(function ($cartItem) {
-            $product = $cartItem->product;
-            $variant = $cartItem->variant;
+    public function index(Request $request)
+    {
+        $items = CartItem::with([
+            'product.images',
+            'product.variants',
+            'variant',
+        ])
+            ->where('user_id', $request->user()->id)
+            ->get()
+            ->map(function ($cartItem) {
+                $product = $cartItem->product;
+                $variant = $cartItem->variant;
 
-            $image = $product?->images->firstWhere('is_primary', true)
-                ?? $product?->images->first();
+                $image = $product?->images->firstWhere('is_primary', true)
+                    ?? $product?->images->first();
 
-            return [
-                'id' => $cartItem->id,
-                'product_id' => $cartItem->product_id,
-                'variant_id' => $cartItem->product_variant_id,
-                'nama' => $product?->name ?? 'Produk',
-                'harga' => (float) ($variant?->price ?? 0),
-                'gambar' => $image
-                    ? asset($image->image_path)
-                    : '',
-                'warna' => $variant?->color ?? '',
-                'ukuran' => $variant?->size ?? '',
-                'qty' => $cartItem->quantity,
-                'stock' => $variant?->stock ?? 0,
-            ];
-        });
+                return [
+                    'id' => $cartItem->id,
+                    'product_id' => $cartItem->product_id,
+                    'variant_id' => $cartItem->product_variant_id,
+                    'nama' => $product?->name ?? 'Produk',
+                    'harga' => (float) ($variant?->price ?? 0),
+                    'gambar' => $image
+                        ? asset($image->image_path)
+                        : '',
+                    'warna' => $variant?->color ?? '',
+                    'ukuran' => $variant?->size ?? '',
+                    'qty' => $cartItem->quantity,
+                    'stock' => $variant?->stock ?? 0,
 
-    return view('cart', compact('items'));
-}
+                    // Semua pilihan varian aktif dari database
+                    'variants' => $product?->variants
+                        ->where('is_active', true)
+                        ->map(fn($item) => [
+                            'id' => $item->id,
+                            'color' => $item->color,
+                            'size' => $item->size,
+                            'price' => (float) $item->price,
+                            'stock' => $item->stock,
+                        ])
+                        ->values()
+                        ->all() ?? [],
+                ];
+            });
+
+        return view('cart', compact('items'));
+    }
+
 
     private function getUserCart(Request $request)
     {
@@ -51,6 +66,16 @@ public function index(Request $request)
             ->where('user_id', $request->user()->id)
             ->get();
     }
+
+    public function count(Request $request)
+{
+    $count = CartItem::where('user_id', $request->user()->id)
+        ->count();
+
+    return response()->json([
+        'count' => $count,
+    ]);
+}
 
     public function add(Request $request)
     {
@@ -108,6 +133,73 @@ public function index(Request $request)
                 ->count(),
         ]);
     }
+
+    public function updateVariant(Request $request, CartItem $cartItem)
+{
+    $data = $request->validate([
+        'variant_id' => 'required|integer|min:1',
+    ]);
+
+    abort_unless(
+        $cartItem->user_id === $request->user()->id,
+        404
+    );
+
+    DB::transaction(function () use ($request, $cartItem, $data) {
+        $cartItem = CartItem::whereKey($cartItem->id)
+            ->where('user_id', $request->user()->id)
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $variant = ProductVariant::with('product')
+            ->whereKey($data['variant_id'])
+            ->lockForUpdate()
+            ->first();
+
+        if (
+            !$variant ||
+            !$variant->is_active ||
+            !$variant->product ||
+            !$variant->product->is_active ||
+            $variant->product_id !== $cartItem->product_id
+        ) {
+            throw ValidationException::withMessages([
+                'variant_id' => 'Varian produk tidak tersedia.',
+            ]);
+        }
+
+        $existingItem = CartItem::where('user_id', $request->user()->id)
+            ->where('product_variant_id', $variant->id)
+            ->where('id', '!=', $cartItem->id)
+            ->lockForUpdate()
+            ->first();
+
+        $newQuantity = $cartItem->quantity
+            + ($existingItem?->quantity ?? 0);
+
+        if ($newQuantity > $variant->stock) {
+            throw ValidationException::withMessages([
+                'variant_id' => 'Stok varian tidak mencukupi.',
+            ]);
+        }
+
+        if ($existingItem) {
+            $existingItem->update([
+                'quantity' => $newQuantity,
+            ]);
+
+            $cartItem->delete();
+        } else {
+            $cartItem->update([
+                'product_variant_id' => $variant->id,
+            ]);
+        }
+    });
+
+    return response()->json([
+        'message' => 'Varian berhasil diperbarui.',
+    ]);
+}
 
     public function update(Request $request, CartItem $cartItem)
     {

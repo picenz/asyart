@@ -11,7 +11,7 @@
 
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-    <!-- Container Utama Split Screen (Full Width) -->
+    <!-- Container Utama Split Screen -->
     <div class="flex flex-col lg:flex-row min-h-screen">
 
         <!-- 1. BAGIAN KIRI: BANNER GAMBAR & BRANDING -->
@@ -20,14 +20,13 @@
 
             <div class="absolute inset-0 bg-black/30"></div>
 
-            <!-- Logo Top Left -->
             <div class="relative z-10">
-                <h1 class="text-xl lg:text-2xl font-serif font-bold text-white tracking-widest uppercase">
+                <a href="{{ route('home') }}"
+                    class="text-xl lg:text-2xl font-serif font-bold text-white tracking-widest uppercase hover:opacity-80 transition inline-block">
                     ASYART.MERCH
-                </h1>
+                </a>
             </div>
 
-            <!-- Teks Bottom Left -->
             <div class="relative z-10 text-white max-w-lg space-y-2 lg:space-y-4">
                 <h2 class="text-2xl sm:text-3xl lg:text-5xl font-serif italic leading-tight">
                     Cute little tees for your everyday daydreams
@@ -39,56 +38,77 @@
             </div>
         </div>
 
-        <!-- 2. BAGIAN KANAN: FORM FORGOT PASSWORD BREEZE -->
+        <!-- 2. BAGIAN KANAN: FORM FORGOT PASSWORD DUMMY -->
         <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-white">
             <div class="w-full max-w-md space-y-6">
 
                 <!-- Header Text -->
-                <div class="text-center space-y-2">
+                <div class="space-y-2">
                     <h3 class="text-2xl md:text-3xl font-serif font-medium">Forgot your password?</h3>
-                    <p class="text-xs text-gray-500 leading-relaxed px-4">
-                        Enter the email linked to your account and we'll send you a secure link to reset your password.
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        Enter the email linked to your account and we'll simulate sending a reset link.
                     </p>
                 </div>
 
-                <!-- Session Status Bawaan Breeze (Pas Berhasil Kirim Email Reset) -->
-                <x-auth-session-status class="mb-4" :status="session('status')" />
+                <!-- AREA ALERT / KETERANGAN DUMMY (Akan muncul lewat JS) -->
+                <div id="dummy-alert" class="hidden p-3 text-xs rounded border"></div>
 
-                <!-- Form Password Email -->
-                <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
-                    @csrf
-
-                    <!-- Email Address -->
+                <!-- Form Dummy Murni Frontend (Tanpa Action Backend / Tanpa Controller) -->
+                <form onsubmit="handleDummySubmit(event)" class="space-y-4">
+                    <!-- Email Input -->
                     <div class="space-y-1">
                         <label for="email" class="block text-xs text-gray-600 font-medium">Email</label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required
-                            autofocus
+                        <input id="email" type="email" name="email" value="dawadzaki11@gmail.com" required
                             class="w-full border border-gray-300 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:border-black transition">
-                        <x-input-error :messages="$errors->get('email')" class="mt-1" />
-                        <p class="text-[11px] text-gray-400 mt-1">
-                            We'll only use this to send the reset link. It expires in 30 minutes.
-                        </p>
                     </div>
 
-                    <!-- Tombol Kirim Link Reset -->
+                    <!-- Tombol Send Reset Link -->
                     <button type="submit"
-                        class="w-full bg-black text-white text-sm py-3 rounded font-medium hover:bg-gray-800 transition mt-2">
+                        class="w-full bg-black text-white text-sm py-3 rounded font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
                         Send reset link
                     </button>
                 </form>
 
-                <!-- Link Kembali ke Login -->
-                <p class="text-center text-xs text-gray-500 pt-4">
+                <!-- Back to Sign In -->
+                <div class="text-center text-xs text-gray-500 pt-2">
                     Remember your password?
                     <a href="{{ route('login') }}" class="font-bold underline text-black hover:text-gray-800">
                         Back to sign in
                     </a>
-                </p>
+                </div>
 
             </div>
         </div>
 
     </div>
+
+    <!-- SCRIPT SIMULASI / DUMMY FRONTEND -->
+    <script>
+        function handleDummySubmit(event) {
+            event.preventDefault(); // Mencegah form reload atau nembak server backend sama sekali
+
+            const emailInput = document.getElementById('email').value.trim();
+            const alertBox = document.getElementById('dummy-alert');
+
+            // Daftar email yang dianggap terdaftar di database lu
+            const registeredEmails = ['dawadzaki11@gmail.com', 'admin@asyart.merch', 'dawa@gmail.com'];
+
+            if (registeredEmails.includes(emailInput)) {
+                // Keterangan Hijau Sukses (Terdaftar)
+                alertBox.className =
+                    "p-3 text-xs rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium";
+                alertBox.innerHTML =
+                    `Password berhasil di reset! Silahkan cek email <strong>${emailInput}</strong> untuk tautan selanjutnya.`;
+                alertBox.classList.remove('hidden');
+            } else {
+                // Keterangan Merah Gagal (Tidak Terdaftar)
+                alertBox.className = "p-3 text-xs rounded bg-rose-50 border border-rose-200 text-rose-800 font-medium";
+                alertBox.innerHTML =
+                    `Akun tidak ditemukan! Silahkan <a href="{{ route('register') }}" class="underline font-bold">register</a> terlebih dahulu.`;
+                alertBox.classList.remove('hidden');
+            }
+        }
+    </script>
 
 </body>
 

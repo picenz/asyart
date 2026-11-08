@@ -59,7 +59,7 @@
 
                 <!-- SEARCH BAR DESKTOP -->
                 <div class="hidden md:block w-[450px] relative">
-                    <form action="{{ route('search.page') }}" method="GET" class="relative flex items-center">
+                    <form action="{{ route('search') }}" method="GET" class="relative flex items-center">
                         <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -109,7 +109,7 @@
 
         <!-- SEARCH BAR KHUSUS MOBILE -->
         <div class="px-4 py-2 md:hidden bg-white border-b border-gray-100 relative">
-            <form action="{{ route('search.page') }}" method="GET" class="w-full relative">
+            <form action="{{ route('search') }}" method="GET" class="w-full relative">
                 <div class="relative flex items-center">
                     <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@
                             <button type="button" onclick="applySearchTag('Short Sleeve')"
                                 class="border border-gray-200 px-2 py-0.5 md:px-2.5 md:py-1 rounded text-gray-700 hover:border-black transition">Short
                                 Sleeve</button>
-                            <button type="button" onclick="applySearchTag('Baby Tee')"
+                            <button type="button" onclick="applySearchTag('Baby tee')"
                                 class="border border-gray-200 px-2 py-0.5 md:px-2.5 md:py-1 rounded text-gray-700 hover:border-black transition">Baby
                                 Tee</button>
                         </div>
@@ -368,7 +368,7 @@
         let quantity = 1;
         let maxStock = 0;
         let scrollPosition = 0;
-        let recentSearches = ['Long Sleeve', 'Baby Tee', 'Baby Tee Bang Windah'];
+        let recentSearches = ['Long Sleeve', 'Baby tee', 'Baby tee Bang Windah'];
 
         // Pool Data Ulasan & Rekomendasi
         const poolReviews = [{
@@ -405,8 +405,8 @@
 
         const poolProducts = [{
                 id: 0,
-                nama: "Baby Tee Bang Windah",
-                kategori: "Baby Tee",
+                nama: "Baby tee Bang Windah",
+                kategori: "Baby tee",
                 harga: "Rp90.000",
                 gambar: "{{ asset('images/windahcrop-htm.jpg') }}"
             },
@@ -426,15 +426,15 @@
             },
             {
                 id: 3,
-                nama: "Baby Tee Snoopy",
-                kategori: "Baby Tee",
+                nama: "Baby tee Snoopy",
+                kategori: "Baby tee",
                 harga: "Rp90.000",
                 gambar: "{{ asset('images/snpcrop-htm.jpg') }}"
             },
             {
                 id: 4,
-                nama: "Baby Tee Radio Head",
-                kategori: "Baby Tee",
+                nama: "Baby tee Radio Head",
+                kategori: "Baby tee",
                 harga: "Rp85.000",
                 gambar: "{{ asset('images/radiocrop-htm.jpg') }}"
             }
@@ -574,8 +574,8 @@
                     <li onclick="applySearchTag('Longsleeve Bang Windah')" class="cursor-pointer text-gray-600 hover:text-black flex items-center justify-between">
                         <span>🔍 Longsleeve Bang Windah</span><span class="text-gray-400">↗</span>
                     </li>
-                    <li onclick="applySearchTag('Baby Tee Snoopy')" class="cursor-pointer text-gray-600 hover:text-black flex items-center justify-between">
-                        <span>🔍 Baby Tee Snoopy</span><span class="text-gray-400">↗</span>
+                    <li onclick="applySearchTag('Baby tee Snoopy')" class="cursor-pointer text-gray-600 hover:text-black flex items-center justify-between">
+                        <span>🔍 Baby tee Snoopy</span><span class="text-gray-400">↗</span>
                     </li>
                 `;
             } else {
@@ -601,7 +601,7 @@
         }
 
         function applySearchTag(tagText) {
-            window.location.href = "{{ route('search.page') }}?q=" + encodeURIComponent(tagText);
+            window.location.href = "{{ route('search') }}?q=" + encodeURIComponent(tagText);
         }
 
         // Render Size & Stok Berdasarkan Warna Aktif
