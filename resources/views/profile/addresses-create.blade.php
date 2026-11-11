@@ -32,13 +32,13 @@
                 shipping.</p>
         </div>
 
-        <!-- Form Card Section (Tab navigasi di atas sudah dihapus bersih) -->
+        <!-- Form Card Section -->
         <div class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 shadow-sm">
             <div class="mb-6 pb-4 border-b border-gray-100">
                 <h2 class="text-lg font-semibold text-gray-900">Add New Shipping Address</h2>
             </div>
 
-            <!-- Form yang siap dicolok BE (Action ke route store & method POST) -->
+            <!-- Form Tambah Alamat -->
             <form action="{{ route('profile.addresses.store') }}" method="POST" class="space-y-5">
                 @csrf
 
@@ -55,27 +55,27 @@
                     @enderror
                 </div>
 
-                <!-- Label Alamat (Contoh: Rumah / Studio / Kantor) -->
+                <!-- Label Alamat -->
                 <div>
-                    <label for="address_label" class="block text-sm font-medium text-gray-700 mb-1">Address Label /
+                    <label for="address_name" class="block text-sm font-medium text-gray-700 mb-1">Address Label /
                         Title</label>
-                    <input type="text" name="address_label" id="address_label" required
-                        value="{{ old('address_label') }}"
+                    <input type="text" name="address_name" id="address_name" required
+                        value="{{ old('address_name') }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
                         placeholder="Contoh: Rumah, Studio, dll">
-                    @error('address_label')
+                    @error('address_name')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Detail Alamat / Jalan -->
                 <div>
-                    <label for="street_address" class="block text-sm font-medium text-gray-700 mb-1">Street Address &
+                    <label for="full_address" class="block text-sm font-medium text-gray-700 mb-1">Street Address &
                         Details</label>
-                    <textarea name="street_address" id="street_address" rows="3" required
+                    <textarea name="full_address" id="full_address" rows="3" required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
-                        placeholder="Jl. Nama Jalan No. XX, Patokan, dll">{{ old('street_address') }}</textarea>
-                    @error('street_address')
+                        placeholder="Jl. Nama Jalan No. XX, Patokan, dll">{{ old('full_address') }}</textarea>
+                    @error('full_address')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -87,7 +87,22 @@
                         <input type="text" name="city" id="city" required value="{{ old('city') }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
                             placeholder="Jakarta Utara">
+                        @error('city')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
+
+                    <!-- TAMBAHAN INPUT PROVINSI DI SINI -->
+                    <div>
+                        <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                        <input type="text" name="province" id="province" required value="{{ old('province') }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
+                            placeholder="DKI Jakarta">
+                        @error('province')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div>
                         <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Postal
                             Code</label>
@@ -95,21 +110,28 @@
                             value="{{ old('postal_code') }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
                             placeholder="14220">
+                        @error('postal_code')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
+                </div>
+
+                <!-- Negara & Nomor Telepon -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
                         <input type="text" name="country" id="country" value="Indonesia" readonly
                             class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-500 text-sm cursor-not-allowed">
                     </div>
-                </div>
-
-                <!-- Nomor Telepon -->
-                <div>
-                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <input type="text" name="phone_number" id="phone_number" required
-                        value="{{ old('phone_number') }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
-                        placeholder="+62 8xx xxxx xxxx">
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="text" name="phone" id="phone" required value="{{ old('phone') }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
+                            placeholder="+62 8xx xxxx xxxx">
+                        @error('phone')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Checkbox Set as Default -->

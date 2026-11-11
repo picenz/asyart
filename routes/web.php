@@ -118,7 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Rute Hapus Produk
         Route::delete('/products/{id}', function ($id) {
             return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
-        })->name('products.destroy');
+        })->name('admin.products.destroy');
 
         // Rute QRIS Transactions Admin (Index & Detail)
         Route::get('/qris', function () {
@@ -153,14 +153,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/orders', [ProfileController::class, 'orders'])->name('profile.orders');
     Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])->name('profile.order.detail');
 
-    // Halaman list addresses utama
-    Route::get('/profile/addresses', function () {
-        return view('addresses');
-    })->name('profile.addresses');
+    // Rute List Addresses (Narik dari ProfileController biar data alamat muncul)
+    Route::get('/profile/addresses', [ProfileController::class, 'addresses'])->name('profile.addresses');
 
-    // Rute Add New Address (Sudah bersih dan nyambung ke method create() & store() di ProfileController)
+    // Rute Add, Edit, Update, & Destroy Address
     Route::get('/profile/addresses/create', [ProfileController::class, 'create'])->name('profile.addresses.create');
     Route::post('/profile/addresses', [ProfileController::class, 'store'])->name('profile.addresses.store');
+    Route::get('/profile/addresses/{id}/edit', [ProfileController::class, 'editAddress'])->name('address.edit');
+    Route::put('/profile/addresses/{id}', [ProfileController::class, 'updateAddress'])->name('address.update');
+    Route::delete('/profile/addresses/{id}', [ProfileController::class, 'destroyAddress'])->name('address.destroy');
 });
 
 // --- RUTE LOGOUT MANUAL ---

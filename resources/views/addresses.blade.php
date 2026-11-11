@@ -32,7 +32,7 @@
                 </a>
             </div>
 
-            <!-- Teks & Menu Navigasi (Menu Addresses aktif) -->
+            <!-- Teks & Menu Navigasi -->
             <div class="relative z-10 text-white max-w-lg space-y-6 my-auto lg:my-12">
                 <div class="space-y-2">
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-serif italic leading-tight">
@@ -43,7 +43,7 @@
                     </p>
                 </div>
 
-                <!-- Menu Navigasi Akun -->
+                <!-- Menu Navigasi Akun Lengkap -->
                 <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 space-y-2 text-xs">
                     <a href="{{ route('profile.edit') }}"
                         class="block text-gray-200 hover:text-white hover:bg-white/10 px-3 py-2 rounded transition">
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- 2. BAGIAN KANAN: DAFTAR ALAMAT TERSIMPAN (SAVED ADDRESSES) -->
+        <!-- 2. BAGIAN KANAN: DAFTAR ALAMAT TERSIMPAN -->
         <div class="w-full lg:w-1/2 flex flex-col justify-between p-6 md:p-12 bg-white overflow-y-auto">
             <div class="w-full max-w-xl mx-auto space-y-8">
 
@@ -91,59 +91,103 @@
                     </a>
                 </div>
 
-                <!-- LIST ALAMAT TERSIMPAN -->
+                <!-- LIST ALAMAT TERSIMPAN (LOOPING DATABASE) -->
                 <div class="space-y-4">
+                    @forelse($addresses as $address)
+                        <div class="border border-gray-200 rounded-lg p-5 space-y-3 bg-white shadow-sm relative">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-xs text-gray-900">{{ $address->address_name }}</h4>
 
-                    <!-- Alamat Utama (Default) -->
-                    <div class="border border-gray-200 rounded-lg p-5 space-y-3 bg-white shadow-sm relative">
-                        <div class="flex items-center justify-between">
-                            <h4 class="font-bold text-xs text-gray-900">Dawa Dzaki</h4>
-                            <span
-                                class="bg-black text-white text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded">Default</span>
-                        </div>
-                        <p class="text-xs text-gray-600 leading-relaxed">
-                            Jl. Koja Raya No. 45<br>
-                            Koja, Jakarta Utara 14220<br>
-                            Indonesia<br>
-                            +62 812 3456 7890
-                        </p>
-                        <div class="flex items-center gap-4 pt-2 border-t border-gray-100 text-xs">
-                            <button type="button" onclick="alert('Edit alamat')"
-                                class="font-medium text-black hover:underline">Edit</button>
-                            <button type="button" onclick="alert('Hapus alamat')"
-                                class="text-gray-400 hover:text-red-600">Remove</button>
-                        </div>
-                    </div>
-
-                    <!-- Alamat Kedua (Studio / Lainnya) -->
-                    <div class="border border-gray-200 rounded-lg p-5 space-y-3 bg-white shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <h4 class="font-bold text-xs text-gray-900">Dawa Dzaki — Studio</h4>
-                        </div>
-                        <p class="text-xs text-gray-600 leading-relaxed">
-                            Finness Studio, Lt. 4<br>
-                            Jl. Kemang Raya No. 12<br>
-                            Mampang Prapatan, Jakarta Selatan 12730<br>
-                            Indonesia
-                        </p>
-                        <div class="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
-                            <div class="flex items-center gap-4">
-                                <button type="button" onclick="alert('Edit alamat')"
-                                    class="font-medium text-black hover:underline">Edit</button>
-                                <button type="button" onclick="alert('Hapus alamat')"
-                                    class="text-gray-400 hover:text-red-600">Remove</button>
+                                    <!-- Badge Keterangan Alamat Utama / Default -->
+                                    @if ($loop->first)
+                                        <span
+                                            class="bg-black text-white text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                            Default Address
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
-                            <button type="button" onclick="alert('Set as default')"
-                                class="text-gray-500 hover:text-black underline">Set as default</button>
-                        </div>
-                    </div>
 
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                {{ $address->full_address }}<br>
+                                {{ $address->city }} — {{ $address->postal_code }}<br>
+                                Indonesia<br>
+                                {{ $address->phone }}
+                            </p>
+
+                            <div class="flex items-center gap-4 pt-2 border-t border-gray-100 text-xs">
+                                <!-- Tombol Edit -->
+                                <a href="{{ route('address.edit', $address->id) }}"
+                                    class="font-medium text-black hover:underline">Edit</a>
+
+                                <!-- Tombol Remove Memicu Modal Pop-up -->
+                                <button type="button" onclick="openDeleteModal('{{ $address->id }}')"
+                                    class="text-gray-400 hover:text-red-600 transition">Remove</button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-10 space-y-3">
+                            <p class="text-xs text-gray-500">Belum ada alamat tersimpan di database.</p>
+                            <a href="{{ route('profile.addresses.create') }}"
+                                class="inline-block text-xs font-medium text-black underline">Tambah Alamat Baru
+                                Sekarang</a>
+                        </div>
+                    @endforelse
                 </div>
 
             </div>
         </div>
 
     </div>
+
+    <!-- === KUSTOM MODAL POP-UP (DI TENGAH LAYAR) === -->
+    <div id="deleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4">
+            <div class="space-y-2 text-center">
+                <h3 class="text-base font-serif font-bold text-gray-900">Hapus Alamat Ini?</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">
+                    Yakin nih, cuk? Alamat ini bakal dihapus permanen dari daftar pengiriman lu dan nggak bisa
+                    dibalikin.
+                </p>
+            </div>
+
+            <!-- Tombol Aksi Modal -->
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="w-1/2 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition">
+                    Batal
+                </button>
+
+                <!-- Form untuk eksekusi DELETE ke Backend -->
+                <form id="deleteForm" method="POST" class="w-1/2">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="w-full py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition shadow-sm">
+                        Ya, Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT JAVASCRIPT BUAT KONTROL MODAL -->
+    <script>
+        function openDeleteModal(addressId) {
+            const modal = document.getElementById('deleteModal');
+            const form = document.getElementById('deleteForm');
+
+            form.action = `/profile/addresses/${addressId}`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+        }
+    </script>
 
 </body>
 
