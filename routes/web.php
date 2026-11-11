@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -49,15 +50,19 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     /*
+    |--------------------------------------------------------------------------
     | Customer
+    |--------------------------------------------------------------------------
     */
 
     Route::middleware('role:customer')->group(function () {
+
+        // Cart
         Route::get('/bag', [CartController::class, 'index'])
             ->name('cart.page');
 
-            Route::get('/cart/count', [CartController::class, 'count'])
-    ->name('cart.count');
+        Route::get('/cart/count', [CartController::class, 'count'])
+            ->name('cart.count');
 
         Route::post('/cart/add', [CartController::class, 'add'])
             ->name('cart.add');
@@ -73,6 +78,8 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/cart/clear', [CartController::class, 'clear'])
             ->name('cart.clear');
+
+        // Checkout & payment
         Route::get('/checkout', [CheckoutController::class, 'index'])
             ->name('checkout');
 
@@ -85,15 +92,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/payment/success', [CheckoutController::class, 'demoPaymentSuccess'])
             ->name('payment.success');
 
+        // Orders
         Route::get('/orders', [CustomerOrderController::class, 'index'])
             ->name('orders.index');
 
-            Route::get('/profile/orders', [ProfileController::class, 'orders'])
-    ->name('profile.orders');
+        Route::get('/profile/orders', [ProfileController::class, 'orders'])
+            ->name('profile.orders');
 
-Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])
-    ->name('profile.order-detail');
+        Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])
+            ->name('profile.order.detail');
 
+        // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])
             ->name('profile.edit');
 
@@ -103,32 +112,39 @@ Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])
         Route::delete('/profile', [ProfileController::class, 'destroy'])
             ->name('profile.destroy');
 
-            // Saved Addresses
-Route::get('/profile/addresses', [ProfileController::class, 'addresses'])
-    ->name('profile.addresses');
+        // Saved addresses
+        Route::get('/profile/addresses', [ProfileController::class, 'addresses'])
+            ->name('profile.addresses');
 
-Route::post('/profile/addresses', [ProfileController::class, 'storeAddress'])
-    ->name('profile.addresses.store');
+        Route::get('/profile/addresses/create', [ProfileController::class, 'create'])
+            ->name('profile.addresses.create');
 
-Route::patch('/profile/addresses/{address}', [ProfileController::class, 'updateAddress'])
-    ->name('profile.addresses.update');
+        Route::post('/profile/addresses', [ProfileController::class, 'storeAddress'])
+            ->name('profile.addresses.store');
 
-Route::delete('/profile/addresses/{address}', [ProfileController::class, 'deleteAddress'])
-    ->name('profile.addresses.delete');
+        Route::patch('/profile/addresses/{address}', [ProfileController::class, 'updateAddress'])
+            ->name('profile.addresses.update');
 
-Route::patch('/profile/addresses/{address}/default', [ProfileController::class, 'setDefaultAddress'])
-    ->name('profile.addresses.default');
+        Route::delete('/profile/addresses/{address}', [ProfileController::class, 'deleteAddress'])
+            ->name('profile.addresses.delete');
+
+        Route::patch('/profile/addresses/{address}/default', [ProfileController::class, 'setDefaultAddress'])
+            ->name('profile.addresses.default');
     });
 
     /*
+    |--------------------------------------------------------------------------
     | Admin
+    |--------------------------------------------------------------------------
     */
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('dashboard');
 
+        // Orders
         Route::get('/orders', [AdminOrderController::class, 'index'])
             ->name('orders.index');
 
@@ -144,8 +160,36 @@ Route::patch('/profile/addresses/{address}/default', [ProfileController::class, 
         Route::get('/orders-export', [AdminOrderController::class, 'export'])
             ->name('orders.export');
 
+        // Products
         Route::get('/products', [ProductController::class, 'index'])
             ->name('products.index');
+
+        Route::get('/products/{id}/edit', function ($id) {
+            return view('admin.products.edit', compact('id'));
+        })->name('products.edit');
+
+        Route::delete('/products/{id}', function ($id) {
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Product deleted successfully.');
+        })->name('products.destroy');
+
+        // QRIS
+        Route::get('/qris', function () {
+            return view('admin.qris');
+        })->name('qris.index');
+
+        Route::get('/qris/{id}', function ($id) {
+            return view('admin.qris-detail', compact('id'));
+        })->name('qris.detail');
+
+        // Settings & account
+        Route::get('/settings', function () {
+            return view('admin.settings');
+        })->name('settings.index');
+
+        Route::get('/account', function () {
+            return view('admin.account');
+        })->name('account');
     });
 });
 

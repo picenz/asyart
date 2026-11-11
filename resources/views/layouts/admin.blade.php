@@ -129,14 +129,16 @@
             <!-- TOPBAR / HEADER -->
             <header
                 class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-10">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 w-full">
                     <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 text-gray-600 hover:text-black">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <div class="hidden sm:block w-64 md:w-80">
+
+                    <!-- Search bar disisain di sini -->
+                    <div class="w-full sm:w-80 md:w-96">
                         <div class="relative">
                             <span
                                 class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
@@ -150,36 +152,7 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <a href="{{ url('/') }}" target="_blank"
-                        class="text-xs sm:text-sm font-medium text-gray-700 hover:text-black flex items-center gap-1">
-                        <span class="hidden sm:inline">View store</span>
-                        <span class="sm:hidden">Store</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                    </a>
-                    <button class="p-2 text-gray-500 hover:text-black relative">
-                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                    </button>
-                    <div class="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-gray-200">
-                        <div
-                            class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">
-                            AM</div>
-                        <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold leading-none">Asyart Merch</p>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Admin</p>
-                        </div>
-                    </div>
-                </div>
             </header>
-
             <!-- ISI HALAMAN UTAMA -->
             <main class="p-4 sm:p-8 flex-1">
                 @yield('content')

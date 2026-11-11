@@ -85,10 +85,10 @@
                         <h3 class="text-2xl font-serif font-medium">Addresses</h3>
                         <p class="text-xs text-gray-500">Manage your saved shipping locations</p>
                     </div>
-                    <button type="button" onclick="alert('Form tambah alamat baru akan muncul di sini')"
-                        class="text-xs font-medium bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition active:scale-95 shadow-sm">
+                    <a href="{{ route('profile.addresses.create') }}"
+                        class="text-xs font-medium bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition active:scale-95 shadow-sm inline-block text-center">
                         Add new address
-                    </button>
+                    </a>
                 </div>
 
                 <!-- LIST ALAMAT TERSIMPAN -->
@@ -133,7 +133,7 @@
                                 <button type="button" onclick="alert('Hapus alamat')"
                                     class="text-gray-400 hover:text-red-600">Remove</button>
                             </div>
-                            <button type="button" onclick="alertikan('Set as default')"
+                            <button type="button" onclick="alert('Set as default')"
                                 class="text-gray-500 hover:text-black underline">Set as default</button>
                         </div>
                     </div>

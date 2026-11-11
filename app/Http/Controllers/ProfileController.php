@@ -84,114 +84,135 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    public function orderDetail($id): View
+   public function create(): View
+{
+    return view('profile.addresses-create');
+}
+
+public function storeAddress(Request $request): RedirectResponse
+{
+    $data = $request->validate([
+        'recipient_name' => ['required', 'string', 'max:255'],
+        'address_label' => ['required', 'string', 'max:50'],
+        'street_address' => ['required', 'string'],
+        'city' => ['required', 'string', 'max:100'],
+        'province' => ['required', 'string', 'max:100'],
+        'postal_code' => ['required', 'string', 'max:10'],
+        'country' => ['required', 'string', 'max:100'],
+        'phone_number' => ['required', 'string', 'max:20'],
+        'is_default' => ['nullable', 'boolean'],
+    ]);
+
+    $user = $request->user();
+
+    DB::transaction(function () use ($data, $user) {
+        $isDefault = !empty($data['is_default'])
+            || !$user->addresses()->exists();
+
+        if ($isDefault) {
+            $user->addresses()->update(['is_default' => false]);
+        }
+
+        $user->addresses()->create([
+            'recipient_name' => $data['recipient_name'],
+            'label' => $data['address_label'],
+            'phone' => $data['phone_number'],
+            'address' => $data['street_address'],
+            'city' => $data['city'],
+            'province' => $data['province'],
+            'postal_code' => $data['postal_code'],
+            'country' => $data['country'],
+            'is_default' => $isDefault,
+        ]);
+    });
+
+    return redirect()->route('profile.addresses')
+        ->with('success', 'Address saved successfully.');
+}
+
+public function updateAddress(Request $request, Address $address): RedirectResponse
+{
+    $address = $request->user()->addresses()->findOrFail($address->id);
+
+    $data = $request->validate([
+        'recipient_name' => ['required', 'string', 'max:255'],
+        'address_label' => ['required', 'string', 'max:50'],
+        'street_address' => ['required', 'string'],
+        'city' => ['required', 'string', 'max:100'],
+        'province' => ['required', 'string', 'max:100'],
+        'postal_code' => ['required', 'string', 'max:10'],
+        'country' => ['required', 'string', 'max:100'],
+        'phone_number' => ['required', 'string', 'max:20'],
+        'is_default' => ['nullable', 'boolean'],
+    ]);
+
+    DB::transaction(function () use ($data, $address, $request) {
+        $isDefault = !empty($data['is_default']);
+
+        if ($isDefault) {
+            $request->user()->addresses()
+                ->where('id', '!=', $address->id)
+                ->update(['is_default' => false]);
+        }
+
+        $address->update([
+            'recipient_name' => $data['recipient_name'],
+            'label' => $data['address_label'],
+            'phone' => $data['phone_number'],
+            'address' => $data['street_address'],
+            'city' => $data['city'],
+            'province' => $data['province'],
+            'postal_code' => $data['postal_code'],
+            'country' => $data['country'],
+            'is_default' => $isDefault,
+        ]);
+    });
+
+    return redirect()->route('profile.addresses')
+        ->with('success', 'Address updated successfully.');
+}
+
+public function deleteAddress(Request $request, Address $address): RedirectResponse
+{
+    $address = $request->user()->addresses()->findOrFail($address->id);
+
+    DB::transaction(function () use ($address, $request) {
+        $wasDefault = $address->is_default;
+
+        $address->delete();
+
+        if ($wasDefault) {
+            $request->user()->addresses()
+                ->latest()
+                ->first()
+                ?->update(['is_default' => true]);
+        }
+    });
+
+    return redirect()->route('profile.addresses')
+        ->with('success', 'Address deleted successfully.');
+}
+
+public function setDefaultAddress(Request $request, Address $address): RedirectResponse
+{
+    $address = $request->user()->addresses()->findOrFail($address->id);
+
+    DB::transaction(function () use ($request, $address) {
+        $request->user()->addresses()
+            ->update(['is_default' => false]);
+
+        $address->update(['is_default' => true]);
+    });
+
+    return redirect()->route('profile.addresses')
+        ->with('success', 'Default address updated successfully.');
+}
+    public function orderDetail($id)
     {
         $order = Orders::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
         return view('profile.order-detail', compact('order'));
-    }
-
-    // Tambah alamat baru
-    public function storeAddress(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'label' => ['required', 'string', 'max:50'],
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string'],
-            'city' => ['required', 'string', 'max:100'],
-            'province' => ['required', 'string', 'max:100'],
-            'postal_code' => ['required', 'string', 'max:10'],
-            'country' => ['required', 'string', 'max:100'],
-        ]);
-
-        $user = $request->user();
-
-        DB::transaction(function () use ($user, $data, $request) {
-            $isFirstAddress = !$user->addresses()->exists();
-
-            if ($isFirstAddress) {
-                $data['is_default'] = true;
-            } else {
-                $data['is_default'] = $request->boolean('is_default');
-            }
-
-            if ($data['is_default']) {
-                $user->addresses()->update(['is_default' => false]);
-            }
-
-            $user->addresses()->create($data);
-        });
-
-        return redirect()->route('profile.addresses')
-            ->with('status', 'address-created');
-    }
-
-    // Edit alamat
-    public function updateAddress(Request $request, $id): RedirectResponse
-    {
-        $address = $request->user()->addresses()->findOrFail($id);
-
-        $data = $request->validate([
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'label' => ['required', 'string', 'max:50'],
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string'],
-            'city' => ['required', 'string', 'max:100'],
-            'province' => ['required', 'string', 'max:100'],
-            'postal_code' => ['required', 'string', 'max:10'],
-            'country' => ['required', 'string', 'max:100'],
-            'is_default' => ['sometimes', 'boolean'],
-        ]);
-
-        DB::transaction(function () use ($request, $address, $data) {
-            if ($request->boolean('is_default')) {
-                $request->user()->addresses()->update(['is_default' => false]);
-                $data['is_default'] = true;
-            }
-
-            $address->update($data);
-        });
-
-        return redirect()->route('profile.addresses')
-            ->with('status', 'address-updated');
-    }
-
-    // Hapus alamat
-    public function deleteAddress(Request $request, $id): RedirectResponse
-    {
-        $address = $request->user()->addresses()->findOrFail($id);
-        $wasDefault = $address->is_default;
-
-        DB::transaction(function () use ($request, $address, $wasDefault) {
-            $address->delete();
-
-            if ($wasDefault) {
-                $nextAddress = $request->user()->addresses()->latest()->first();
-
-                if ($nextAddress) {
-                    $nextAddress->update(['is_default' => true]);
-                }
-            }
-        });
-
-        return redirect()->route('profile.addresses')
-            ->with('status', 'address-deleted');
-    }
-
-    // Jadikan alamat utama
-    public function setDefaultAddress(Request $request, $id): RedirectResponse
-    {
-        $address = $request->user()->addresses()->findOrFail($id);
-
-        DB::transaction(function () use ($request, $address) {
-            $request->user()->addresses()->update(['is_default' => false]);
-            $address->update(['is_default' => true]);
-        });
-
-        return redirect()->route('profile.addresses')
-            ->with('status', 'address-default-updated');
     }
 }
