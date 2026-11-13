@@ -829,6 +829,13 @@
             }
         }
         async function addToBag() {
+            const isLoggedIn = @json(auth()->check());
+
+            if (!isLoggedIn) {
+                window.location.href = @json(route('login'));
+                return;
+            }
+
             if (!selectedSize || maxStock <= 0) {
                 alert('Pilih ukuran yang stoknya tersedia dulu!');
                 return;

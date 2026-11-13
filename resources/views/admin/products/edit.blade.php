@@ -1,23 +1,49 @@
+
 @extends('layouts.admin', ['title' => 'Admin - Edit Product'])
 
 @section('content')
+    @php
+        $colors = $product->variants->pluck('color')->unique()->values();
+        $sizes = $product->variants->pluck('size')->unique()->values();
+
+        $stocks = $product->variants
+            ->groupBy('color')
+            ->map(fn ($variants) => $variants->pluck('stock', 'size'));
+
+        $firstVariant = $product->variants->first();
+    @endphp
+
     <div x-data="{
-        colors: ['White', 'Black'],
+        colors: @js($colors),
         newColor: '',
-        sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+        sizes: @js($sizes),
         newSize: '',
+        stocks: @js($stocks),
         showDeleteModal: false,
+
         addColor() {
-            if (this.newColor.trim() !== '' && !this.colors.includes(this.newColor.trim())) {
-                this.colors.push(this.newColor.trim());
+            const color = this.newColor.trim();
+
+            if (color !== '' && !this.colors.includes(color)) {
+                this.colors.push(color);
+                this.stocks[color] = {};
                 this.newColor = '';
             }
         },
+
         addSize() {
-            if (this.newSize.trim() !== '' && !this.sizes.includes(this.newSize.trim().toUpperCase())) {
-                this.sizes.push(this.newSize.trim().toUpperCase());
+            const size = this.newSize.trim().toUpperCase();
+
+            if (size !== '' && !this.sizes.includes(size)) {
+                this.sizes.push(size);
                 this.newSize = '';
             }
+        },
+
+        removeColor(index) {
+            const color = this.colors[index];
+            this.colors.splice(index, 1);
+            delete this.stocks[color];
         }
     }" class="max-w-7xl mx-auto pb-12">
 
@@ -46,12 +72,15 @@
         </div>
 
         <!-- FORM UTAMA -->
-        <form id="editProductForm" action="#" method="POST" enctype="multipart/form-data"
+        <form id="editProductForm"
+            action="{{ route('admin.products.update', $product->id) }}"
+            method="POST"
+            enctype="multipart/form-data"
             class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
             @csrf
             @method('PUT')
 
-            <!-- KOLOM KIRI (2 SPAN) -->
             <div class="lg:col-span-2 space-y-6">
 
                 <!-- Basic Information -->
@@ -60,7 +89,8 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Product name</label>
-                        <input type="text" name="name" value="Longsleeve Fish Dishes"
+                        <input type="text" name="name"
+                            value="{{ old('name', $product->name) }}"
                             class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
                             required>
                     </div>
@@ -68,7 +98,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Description</label>
                         <textarea name="description" rows="4"
-                            class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition">Comfortable long sleeve apparel made from premium cotton with graphic details.</textarea>
+                            class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition">{{ old('description', $product->description) }}</textarea>
                     </div>
                 </div>
 
@@ -76,17 +106,27 @@
                 <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
                     <h2 class="text-sm font-bold text-gray-900">Images</h2>
 
+                    @if ($product->images->isNotEmpty())
+                        <div class="flex flex-wrap gap-3">
+                            @foreach ($product->images as $image)
+                                <img src="{{ asset('storage/' . $image->image_path) }}"
+                                    alt="{{ $image->alt_text ?? $product->name }}"
+                                    class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div
                         class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:bg-gray-50/50 transition cursor-pointer relative">
-                        <input type="file" name="images[]" multiple class="absolute inset-0 opacity-0 cursor-pointer">
+                        <input type="file" name="images[]" multiple accept="image/*"
+                            class="absolute inset-0 opacity-0 cursor-pointer">
                         <div class="flex flex-col items-center justify-center space-y-2">
                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <p class="text-xs font-semibold text-gray-700">Drag images here or click to browse</p>
-                            <p class="text-[11px] text-gray-400">JPG or PNG, up to 5 MB each. The first image is the cover.
-                            </p>
+                            <p class="text-[11px] text-gray-400">JPG or PNG, up to 5 MB each. Existing images will be kept.</p>
                         </div>
                     </div>
                 </div>
@@ -99,12 +139,11 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-2">Colours</label>
                         <div class="flex flex-wrap items-center gap-2 mb-4">
-                            <template x-for="(col, index) in colors" :key="index">
-                                <div
-                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg text-xs font-medium">
+                            <template x-for="(col, index) in colors" :key="col">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg text-xs font-medium">
                                     <span x-text="col"></span>
-                                    <button type="button" @click="colors.splice(index, 1)"
-                                        class="text-gray-400 hover:text-white font-bold ml-1">✕</button>
+                                    <button type="button" @click="removeColor(index)"
+                                        class="text-gray-400 hover:text-white font-bold ml-1">×</button>
                                 </div>
                             </template>
 
@@ -124,12 +163,11 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-2">Sizes</label>
                         <div class="flex flex-wrap items-center gap-2 mb-6">
-                            <template x-for="(size, index) in sizes" :key="index">
-                                <div
-                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg text-xs font-bold tracking-wide">
+                            <template x-for="(size, index) in sizes" :key="size">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg text-xs font-bold tracking-wide">
                                     <span x-text="size"></span>
                                     <button type="button" @click="sizes.splice(index, 1)"
-                                        class="text-gray-400 hover:text-white font-bold ml-1">✕</button>
+                                        class="text-gray-400 hover:text-white font-bold ml-1">×</button>
                                 </div>
                             </template>
 
@@ -155,8 +193,7 @@
                         <div class="overflow-x-auto border border-gray-200 rounded-xl">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                    <tr
-                                        class="bg-gray-50/80 border-b border-gray-200 text-gray-500 uppercase text-[11px] font-semibold">
+                                    <tr class="bg-gray-50/80 border-b border-gray-200 text-gray-500 uppercase text-[11px] font-semibold">
                                         <th class="py-3 px-4 w-32">Colour</th>
                                         <template x-for="size in sizes" :key="size">
                                             <th class="py-3 px-3 text-center" x-text="size"></th>
@@ -164,19 +201,22 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-                                    <template x-for="(color, cIdx) in colors" :key="cIdx">
+                                    <template x-for="(color, cIdx) in colors" :key="color">
                                         <tr class="hover:bg-gray-50/50 transition">
                                             <td class="py-3 px-4 font-semibold text-gray-900" x-text="color"></td>
-                                            <template x-for="(size, sIdx) in sizes" :key="sIdx">
+                                            <template x-for="(size, sIdx) in sizes" :key="size">
                                                 <td class="py-3 px-3 text-center">
                                                     <input type="number"
                                                         :name="'variants[' + color + '][' + size + '][stock]'"
-                                                        value="2" min="0"
+                                                        :value="stocks[color]?.[size] ?? 0"
+                                                        @input="(stocks[color] ??= {})[size] = $event.target.value"
+                                                        min="0"
                                                         class="w-16 px-2 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-medium text-center focus:outline-none focus:border-black transition">
 
                                                     <input type="hidden"
                                                         :name="'variants[' + color + '][' + size + '][color]'"
                                                         :value="color">
+
                                                     <input type="hidden"
                                                         :name="'variants[' + color + '][' + size + '][size]'"
                                                         :value="size">
@@ -187,15 +227,12 @@
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-[11px] text-gray-400 mt-3">Variants with 0 stock are shown as "Sold out" in the
-                            store.</p>
+                        <p class="text-[11px] text-gray-400 mt-3">Variants with 0 stock are shown as "Sold out" in the store.</p>
                     </div>
-
                 </div>
-
             </div>
 
-            <!-- KOLOM KANAN (1 SPAN) -->
+            <!-- KOLOM KANAN -->
             <div class="space-y-6">
 
                 <!-- Status Card -->
@@ -206,14 +243,12 @@
                         <div class="relative">
                             <select name="status"
                                 class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black appearance-none">
-                                <option value="Active" selected>Active — visible in store</option>
-                                <option value="Draft">Draft — hidden from store</option>
+                                <option value="Active" @selected(old('status', $product->is_active ? 'Active' : 'Draft') === 'Active')>Active — visible in store</option>
+                                <option value="Draft" @selected(old('status', $product->is_active ? 'Active' : 'Draft') === 'Draft')>Draft — hidden from store</option>
                             </select>
-                            <span
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </span>
                         </div>
@@ -228,38 +263,38 @@
                         <div class="relative">
                             <select name="category"
                                 class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black appearance-none">
-                                <option value="Long Sleeve" selected>Long Sleeve</option>
-                                <option value="Short Sleeve">Short Sleeve</option>
-                                <option value="Baby tee">Baby tee</option>
+                                <option value="Long Sleeve" @selected(old('category', $product->category) === 'Long Sleeve')>Long Sleeve</option>
+                                <option value="Short Sleeve" @selected(old('category', $product->category) === 'Short Sleeve')>Short Sleeve</option>
+                                <option value="Baby tee" @selected(old('category', $product->category) === 'Baby tee')>Baby tee</option>
                             </select>
-                            <span
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pricing Card & Tombol Hapus Khusus dengan Modal Pop-up -->
+                <!-- Pricing Card -->
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
                     <h3 class="text-sm font-bold text-gray-900">Pricing</h3>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Price (Rp)</label>
-                        <input type="number" name="price" value="90000"
+                        <input type="number" name="price"
+                            value="{{ old('price', $firstVariant?->price ?? 0) }}"
+                            min="0"
                             class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
                             required>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">SKU prefix</label>
-                        <input type="text" name="sku" value="FN-TWB"
+                        <input type="text" name="sku"
+                            value="{{ old('sku', $firstVariant?->sku ?? '') }}"
                             class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
                             required>
                     </div>
 
-                    <!-- Tombol Hapus Item & Modal Konfirmasi -->
                     <div class="pt-3 border-t border-gray-100">
                         <button @click="showDeleteModal = true" type="button"
                             class="w-full py-2 px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-2">
@@ -271,9 +306,7 @@
                         </button>
                     </div>
                 </div>
-
             </div>
-
         </form>
 
         <!-- POPUP MODAL KONFIRMASI HAPUS -->
@@ -281,32 +314,28 @@
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
             x-transition.opacity>
 
-            <!-- Kotak Modal Pop-up -->
             <div @click.outside="showDeleteModal = false"
                 class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
 
-                <!-- Icon Peringatan -->
-                <div
-                    class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-lg font-bold">
-                    ⚠️
+                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-lg font-bold">
+                    ⚠
                 </div>
 
-                <!-- Teks Konfirmasi -->
                 <div>
                     <h3 class="text-sm font-bold text-gray-900">Konfirmasi Hapus</h3>
-                    <p class="text-xs text-gray-500 mt-1">Apakah Anda yakin ingin menghapus item ini dari sistem? Tindakan
-                        ini tidak dapat dibatalkan.</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Apakah Anda yakin ingin menghapus item ini dari sistem? Tindakan ini tidak dapat dibatalkan.
+                    </p>
                 </div>
 
-                <!-- Tombol Aksi Modal -->
                 <div class="flex items-center gap-2 pt-2">
                     <button @click="showDeleteModal = false" type="button"
                         class="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition">
                         Batal
                     </button>
 
-                    <!-- Form Eksekusi Hapus ke Backend di edit.blade.php -->
-                    <form action="{{ route('admin.products.destroy', 1) }}" method="POST" class="w-1/2">
+                    <form action="{{ route('admin.products.destroy', $product->id) }}"
+                        method="POST" class="w-1/2">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -314,11 +343,8 @@
                             Ya, Hapus
                         </button>
                     </form>
-                    </form>
                 </div>
-
             </div>
         </div>
-
     </div>
 @endsection

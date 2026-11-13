@@ -86,7 +86,16 @@ class ProfileController extends Controller
 
    public function create(): View
 {
+
     return view('profile.addresses-create');
+}
+
+public function editAddress(Request $request, Address $address): View
+{
+    $address = $request->user()->addresses()
+        ->findOrFail($address->id);
+
+    return view('profile.addresses-edit', compact('address'));
 }
 
 public function storeAddress(Request $request): RedirectResponse

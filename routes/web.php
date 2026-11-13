@@ -10,7 +10,12 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\QrisController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 
 /*
@@ -125,6 +130,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/profile/addresses/{address}', [ProfileController::class, 'updateAddress'])
             ->name('profile.addresses.update');
 
+        Route::get('/profile/addresses/{address}/edit', [ProfileController::class, 'editAddress'])
+            ->name('profile.addresses.edit');
+
         Route::delete('/profile/addresses/{address}', [ProfileController::class, 'deleteAddress'])
             ->name('profile.addresses.delete');
 
@@ -140,9 +148,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
 
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
 
         // Orders
         Route::get('/orders', [AdminOrderController::class, 'index'])
@@ -154,6 +161,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/orders/{id}/ship', [AdminOrderController::class, 'markAsShipped'])
             ->name('orders.ship');
 
+        Route::patch('/orders/{id}/shipment', [AdminOrderController::class, 'updateShipment'])
+            ->name('orders.shipment.update');
+
         Route::patch('/orders/{id}/complete', [AdminOrderController::class, 'markAsCompleted'])
             ->name('orders.complete');
 
@@ -161,35 +171,44 @@ Route::middleware('auth')->group(function () {
             ->name('orders.export');
 
         // Products
-        Route::get('/products', [ProductController::class, 'index'])
+        Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
 
-        Route::get('/products/{id}/edit', function ($id) {
-            return view('admin.products.edit', compact('id'));
-        })->name('products.edit');
+        Route::get('/products/create', [AdminProductController::class, 'create'])
+            ->name('products.create');
 
-        Route::delete('/products/{id}', function ($id) {
-            return redirect()->route('admin.products.index')
-                ->with('success', 'Product deleted successfully.');
-        })->name('products.destroy');
+        Route::post('/products', [AdminProductController::class, 'store'])
+            ->name('products.store');
+
+        Route::get('/products/{id}/edit', [AdminProductController::class, 'edit'])
+            ->name('products.edit');
+
+        Route::put('/products/{id}', [AdminProductController::class, 'update'])
+            ->name('products.update');
+
+        Route::delete('/products/{id}', [AdminProductController::class, 'destroy'])
+            ->name('products.destroy');
 
         // QRIS
-        Route::get('/qris', function () {
-            return view('admin.qris');
-        })->name('qris.index');
+        Route::get('/qris', [QrisController::class, 'index'])
+            ->name('qris.index');
 
-        Route::get('/qris/{id}', function ($id) {
-            return view('admin.qris-detail', compact('id'));
-        })->name('qris.detail');
-
+        Route::get('/qris/{id}', [QrisController::class, 'show'])
+            ->name('qris.detail');
         // Settings & account
-        Route::get('/settings', function () {
-            return view('admin.settings');
-        })->name('settings.index');
+        Route::get('/settings', [SettingController::class, 'index'])
+            ->name('settings.index');
 
-        Route::get('/account', function () {
-            return view('admin.account');
-        })->name('account');
+        Route::put('/settings', [SettingController::class, 'update'])
+            ->name('settings.update');
+Route::get('/account', [AccountController::class, 'index'])
+    ->name('account');
+
+Route::put('/account/profile', [AccountController::class, 'updateProfile'])
+    ->name('account.profile.update');
+
+Route::put('/account/password', [AccountController::class, 'updatePassword'])
+    ->name('account.password.update');e('account');
     });
 });
 

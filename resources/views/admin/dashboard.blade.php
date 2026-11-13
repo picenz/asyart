@@ -6,21 +6,37 @@
         <div class="flex justify-between items-end mb-6">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Good morning, Asyart</h1>
-                <p class="text-sm text-gray-500 mt-0.5">Here's what's happening in your store today — Tue, 12 May 2026.</p>
+                <p class="text-sm text-gray-500 mt-0.5">
+                    Here's what's happening in your store today — {{ now()->format('D, d M Y') }}.
+                </p>
             </div>
-            <div>
-                <button
-                    class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50">
-                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Today
-                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
+
+<div>
+    <form method="GET" action="{{ route('admin.dashboard') }}">
+        <div class="relative flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4v-4m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+
+            <select
+                name="period"
+                onchange="this.form.submit()"
+                class="appearance-none bg-transparent outline-none cursor-pointer pr-4 text-xs font-medium text-gray-700"
+            >
+                <option value="today" @selected($period === 'today')>Today</option>
+                <option value="yesterday" @selected($period === 'yesterday')>Yesterday</option>
+                <option value="7days" @selected($period === '7days')>Last 7 days</option>
+                <option value="30days" @selected($period === '30days')>Last 30 days</option>
+            </select>
+
+            <svg class="w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </div>
+    </form>
+</div>
+
         </div>
 
         <!-- 4 KARTU STATISTIK ATAS -->
@@ -35,8 +51,9 @@
                     </svg>
                 </div>
                 <div class="mt-4">
-                    <h3 class="text-xl font-bold tracking-tight">Rp18.420.000</h3>
-                    <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+<h3 class="text-xl font-bold tracking-tight">
+    Rp{{ number_format($revenueToday, 0, ',', '.') }}
+</h3>                    <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
                         <span>↗ +12% vs yesterday</span>
                     </p>
                 </div>
@@ -45,7 +62,7 @@
             <!-- Orders to Ship -->
             <div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-medium text-gray-500">Orders to ship</span>
+                    <span class="text-xs font-medium text-gray-500">{{ $ordersToShip }}</span>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -60,7 +77,7 @@
             <!-- Awaiting Payment -->
             <div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-medium text-gray-500">Awaiting payment</span>
+                    <span class="text-xs font-medium text-gray-500">{{ $awaitingPayment }}</span>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -75,7 +92,7 @@
             <!-- Low Stock -->
             <div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-medium text-gray-500">Low stock</span>
+                    <span class="text-xs font-medium text-gray-500">{{ $lowStockCount }}</span>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -111,73 +128,80 @@
                                 <th class="pb-3 font-medium">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-50 text-sm">
-                            <!-- Baris 1 -->
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="py-3 font-medium text-xs">#FN-10433</td>
-                                <td class="py-3 text-xs text-gray-700">Rani Pratama</td>
-                                <td class="py-3 text-xs text-gray-500">12 May, 14:41</td>
-                                <td class="py-3 text-xs font-medium">Rp90.000</td>
-                                <td class="py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/50">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Awaiting payment
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Baris 2 -->
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="py-3 font-medium text-xs">#FN-10432</td>
-                                <td class="py-3 text-xs text-gray-700">Ines Moreau</td>
-                                <td class="py-3 text-xs text-gray-500">12 May, 14:32</td>
-                                <td class="py-3 text-xs font-medium">Rp80.000</td>
-                                <td class="py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-black text-white">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Paid
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Baris 3 -->
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="py-3 font-medium text-xs">#FN-10430</td>
-                                <td class="py-3 text-xs text-gray-700">Dimas Saputra</td>
-                                <td class="py-3 text-xs text-gray-500">12 May, 10:41</td>
-                                <td class="py-3 text-xs font-medium">Rp70.000</td>
-                                <td class="py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-black text-white">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Paid
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Baris 4 -->
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="py-3 font-medium text-xs">#FN-10429</td>
-                                <td class="py-3 text-xs text-gray-700">Sarah Wijaya</td>
-                                <td class="py-3 text-xs text-gray-500">11 May, 19:12</td>
-                                <td class="py-3 text-xs font-medium">Rp160.000</td>
-                                <td class="py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-100 text-gray-800">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> Shipped
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Baris 5 -->
-                            <tr class="hover:bg-gray-50/50">
-                                <td class="py-3 font-medium text-xs">#FN-10428</td>
-                                <td class="py-3 text-xs text-gray-700">Bayu Nugroho</td>
-                                <td class="py-3 text-xs text-gray-500">11 May, 16:20</td>
-                                <td class="py-3 text-xs font-medium">Rp90.000</td>
-                                <td class="py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Completed
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
+                      <tbody class="divide-y divide-gray-50 text-sm">
+    @forelse ($recentOrders as $order)
+        @php
+            $status = strtolower($order->status ?? 'pending');
+
+            $statusLabel = match ($status) {
+                'pending', 'awaiting payment' => 'Awaiting payment',
+                'paid' => 'Paid',
+                'processing' => 'Processing',
+                'shipped' => 'Shipped',
+                'completed' => 'Completed',
+                default => ucfirst($status),
+            };
+
+            $statusClass = match ($status) {
+                'pending', 'awaiting payment' =>
+                    'bg-amber-50 text-amber-700 border border-amber-200/50',
+                'paid' =>
+                    'bg-black text-white',
+                'processing' =>
+                    'bg-blue-50 text-blue-700 border border-blue-200/50',
+                'shipped' =>
+                    'bg-gray-100 text-gray-800',
+                'completed' =>
+                    'bg-emerald-50 text-emerald-700 border border-emerald-200/50',
+                default =>
+                    'bg-gray-100 text-gray-700',
+            };
+
+            $dotClass = match ($status) {
+                'pending', 'awaiting payment' => 'bg-amber-500',
+                'paid' => 'bg-white',
+                'processing' => 'bg-blue-500',
+                'shipped' => 'bg-gray-500',
+                'completed' => 'bg-emerald-500',
+                default => 'bg-gray-500',
+            };
+
+            $customerName = $order->user?->name
+                ?: trim(($order->first_name ?? '') . ' ' . ($order->last_name ?? ''));
+        @endphp
+
+        <tr class="hover:bg-gray-50/50">
+            <td class="py-3 font-medium text-xs">
+                #FN-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+            </td>
+
+            <td class="py-3 text-xs text-gray-700">
+                {{ $customerName ?: $order->email }}
+            </td>
+
+            <td class="py-3 text-xs text-gray-500">
+                {{ $order->created_at?->format('d M, H:i') }}
+            </td>
+
+            <td class="py-3 text-xs font-medium">
+                Rp{{ number_format($order->total_price, 0, ',', '.') }}
+            </td>
+
+            <td class="py-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium {{ $statusClass }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $dotClass }}"></span>
+                    {{ $statusLabel }}
+                </span>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="5" class="py-6 text-center text-xs text-gray-400">
+                No orders yet.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
                     </table>
                 </div>
             </div>
@@ -191,46 +215,34 @@
                             class="text-xs font-semibold text-gray-600 hover:text-black">View products</a>
                     </div>
 
-                    <div class="space-y-4">
-                        <!-- Produk 1 -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center font-bold text-xs text-amber-800">
-                                    👕</div>
-                                <div>
-                                    <h4 class="text-xs font-medium text-gray-800">Longsleeve Gold Fish</h4>
-                                </div>
-                            </div>
-                            <span class="text-xs font-semibold text-amber-600">6 left</span>
-                        </div>
+                   <div class="space-y-4">
+    @forelse ($lowStockProducts as $variant)
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center font-bold text-xs text-amber-800">
+                    👕
+                </div>
 
-                        <!-- Produk 2 -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center font-bold text-xs text-blue-800">
-                                    👕</div>
-                                <div>
-                                    <h4 class="text-xs font-medium text-gray-800">Long Sleeve Tshirt Puffer Fish</h4>
-                                </div>
-                            </div>
-                            <span class="text-xs font-semibold text-amber-600">9 left</span>
-                        </div>
+                <div>
+                    <h4 class="text-xs font-medium text-gray-800">
+                        {{ $variant->product?->name ?? 'Produk tidak ditemukan' }}
+                    </h4>
+                    <p class="text-[11px] text-gray-400">
+                        {{ $variant->color }} / {{ $variant->size }}
+                    </p>
+                </div>
+            </div>
 
-                        <!-- Produk 3 -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center font-bold text-xs text-orange-800">
-                                    👕</div>
-                                <div>
-                                    <h4 class="text-xs font-medium text-gray-800">Tshirt MasKoki Baby tee</h4>
-                                </div>
-                            </div>
-                            <span class="text-xs font-semibold text-red-600">Out of stock</span>
-                        </div>
-                    </div>
+            <span class="text-xs font-semibold {{ $variant->stock == 0 ? 'text-red-600' : 'text-amber-600' }}">
+                {{ $variant->stock == 0 ? 'Out of stock' : $variant->stock . ' left' }}
+            </span>
+        </div>
+    @empty
+        <p class="text-xs text-gray-400">
+            No low stock products.
+        </p>
+    @endforelse
+</div>
                 </div>
             </div>
 

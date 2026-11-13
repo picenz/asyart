@@ -79,8 +79,8 @@
                                     <div
                                         class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-xs overflow-hidden border border-gray-200">
                                         @if (!empty($product->image))
-                                            <img src="{{ asset('storage/' . $product->image) }}" alt=""
-                                                class="w-full h-full object-cover">
+                                            <img src="{{ str_starts_with($product->image, 'products/') ? asset('storage/' . $product->image) : asset($product->image) }}"
+                                                alt="" class="w-full h-full object-cover">
                                         @else
                                             👕
                                         @endif

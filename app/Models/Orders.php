@@ -24,6 +24,13 @@ class Orders extends Model
         'delivery_method',
         'total_price',
         'status',
+        'courier',
+        'tracking_number',
+        'shipped_at',
+    ];
+
+    protected $casts = [
+        'shipped_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -35,4 +42,9 @@ class Orders extends Model
     {
         return $this->hasMany(OrderItem::class, 'order_id');
     }
+
+    public function payment()
+{
+    return $this->hasOne(Payment::class, 'order_id');
+}
 }

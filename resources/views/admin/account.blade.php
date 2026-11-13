@@ -16,20 +16,19 @@
             </div>
 
             <!-- Form Profile (Full name & Email) -->
-            <form action="#" method="POST" class="space-y-4">
-                @csrf
+<form action="{{ route('admin.account.profile.update') }}" method="POST" class="space-y-4">                @csrf
                 @method('PUT')
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Full name</label>
-                        <input type="text" name="name" value="Ayu Lestari"
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}"
                             class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
                             required>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" value="admin@finness.com"
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}"
                             class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
                             required>
                     </div>
@@ -51,16 +50,17 @@
                 <p class="text-[11px] text-gray-500 mt-0.5">Use at least 8 characters with a mix of letters and numbers.</p>
             </div>
 
-            <form action="#" method="POST" class="space-y-4">
-                @csrf
+<form action="{{ route('admin.account.password.update') }}" method="POST" class="space-y-4">                @csrf
                 @method('PUT')
 
                 <!-- Current Password -->
                 <div x-data="{ show: false }">
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Current password</label>
                     <div class="relative">
-                        <input :type="show ? 'text' : 'password'" name="current_password" value="••••••••••••"
-                            class="w-full px-3 py-2 pr-10 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition">
+                        <input :type="show ? 'text' : 'password'" name="current_password"
+    placeholder="Enter current password"
+    class="w-full px-3 py-2 pr-10 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black transition"
+    required>
                         <button type="button" @click="show = !show"
                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
                             <!-- Icon Mata Buka -->

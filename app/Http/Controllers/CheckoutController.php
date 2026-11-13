@@ -7,6 +7,8 @@ use App\Models\Orders;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Payment;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
@@ -140,6 +142,15 @@ class CheckoutController extends Controller
                 'status' => 'pending',
             ]);
 
+            Payment::create([
+                'order_id' => $order->id,
+                'reference' => 'QRIS-' . now()->format('Ymd') . '-' . strtoupper(Str::random(8)),
+                'payment_method' => 'QRIS',
+                'amount' => $order->total_price,
+                'status' => 'pending',
+                'expires_at' => $order->created_at->copy()->addMinutes(15),
+            ]);
+
             foreach ($orderLines as $line) {
                 $order->items()->create($line);
             }
@@ -164,8 +175,7 @@ class CheckoutController extends Controller
 
         abort_unless($orderId, 404);
 
-        $order = Orders::with('items')
-            ->where('user_id', $request->user()->id)
+$order = Orders::with(['items', 'payment'])            ->where('user_id', $request->user()->id)
             ->findOrFail($orderId);
 
         $subtotal = (float) $order->items->sum('subtotal');
@@ -176,12 +186,16 @@ class CheckoutController extends Controller
 
         $total = (float) $order->total_price;
         $tax = max(0, $total - $subtotal - $shippingCost);
+        $payment = $order->payment;
 
-        $expiresAt = $order->created_at->copy()->addMinutes(15);
-        $isExpired = now()->greaterThanOrEqualTo($expiresAt);
+        abort_unless($payment, 404);
 
+        $expiresAt = $payment->expires_at;
+        $isExpired = $payment->status === 'expired'
+            || now()->greaterThanOrEqualTo($expiresAt);
         return view('payment', compact(
             'order',
+            'payment',
             'subtotal',
             'shippingCost',
             'tax',
@@ -194,19 +208,19 @@ class CheckoutController extends Controller
     /**
      * Demo only. Ini bukan verifikasi pembayaran QRIS sungguhan.
      */
-   public function demoPaymentSuccess(Request $request)
-{
-    $orderId = session('asyart_pending_order_id');
+    public function demoPaymentSuccess(Request $request)
+    {
+        $orderId = session('asyart_pending_order_id');
 
-    abort_unless($orderId, 404);
+        abort_unless($orderId, 404);
 
-    Orders::where('user_id', $request->user()->id)
-        ->findOrFail($orderId);
+        Orders::where('user_id', $request->user()->id)
+            ->findOrFail($orderId);
 
-    return redirect()->route('payment')
-        ->with(
-            'warning',
-            'Demo saja: pembayaran belum diverifikasi oleh payment gateway.'
-        );
-}
+        return redirect()->route('payment')
+            ->with(
+                'warning',
+                'Demo saja: pembayaran belum diverifikasi oleh payment gateway.'
+            );
+    }
 }

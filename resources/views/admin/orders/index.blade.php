@@ -99,12 +99,12 @@
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="py-3.5 px-4 font-bold text-gray-900">
                                         <a href="{{ route('admin.orders.detail', $order->id) }}"
-                                            class="hover:underline">{{ $order->order_number }}</a>
+                                            class="hover:underline">#FN-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</a>
                                     </td>
                                     <td class="py-3.5 px-4 text-gray-500">{{ $order->created_at->format('d M Y, H:i') }}</td>
                                     <td class="py-3.5 px-4 font-medium">{{ $order->first_name }} {{ $order->last_name }}</td>
                                     <td class="py-3.5 px-4 text-gray-600">
-                                        {{ count(json_decode($order->items_json, true) ?? []) }}
+                                       {{ $order->items_sum_quantity ?? 0 }}
                                     </td>
                                     <td class="py-3.5 px-4 font-semibold">
                                         Rp{{ number_format($order->total_price, 0, ',', '.') }}
@@ -114,8 +114,7 @@
                                         @php
                                             $status = $order->status;
                                         @endphp
-                                        @if ($status == 'Awaiting payment' || $status == 'Processing')
-                                            <span
+@if (in_array($status, ['pending', 'Awaiting payment', 'Processing']))                                            <span
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/50">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {{ $status }}
                                             </span>
@@ -133,8 +132,7 @@
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                {{ $status }}
-                                            </span>
+{{ $status == 'pending' ? 'Awaiting payment' : $status }}                                            </span>
                                         @endif
                                     </td>
                                     <td class="py-3.5 px-4 text-right">
