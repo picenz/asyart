@@ -97,8 +97,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            <!-- BERUBAH DINAMIS KE FIRST NAME DATABASE -->
-                        {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
+                            {{ Auth::user()->first_name }} {{ Auth::user()->last_name }}
                         </a>
                     @endguest
                 </div>
@@ -246,7 +245,7 @@
             </div>
         </div>
 
-        <!-- 2. GRID KATALOG PRODUK INTERAKTIF -->
+        <!-- 2. GRID KATALOG PRODUK INTERAKTIF (Dirender langsung dari Blade agar data aman) -->
         @php
             $katalog = [
                 [
@@ -510,10 +509,10 @@
         let scrollPosition = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
-            fetchProductsFromBackend();
             renderRecentSearches();
             renderSuggestions('');
             updateCartCountUI();
+            applyFiltersAndSort(); // Langsung eksekusi filter saat halaman siap
 
             const desktopInput = document.getElementById('search-input');
             const mobileInput = document.getElementById('search-input-mobile');
@@ -539,48 +538,6 @@
             document.body.style.removeProperty('top');
             document.body.style.removeProperty('width');
             window.scrollTo(0, scrollPosition);
-        }
-
-        function fetchProductsFromBackend() {
-            fetch('/api/products')
-                .then(response => response.json())
-                .then(katalog => {
-                    renderProductGrid(katalog);
-                })
-                .catch(error => {
-                    console.error('Gagal ngambil data produk dari BE:', error);
-                });
-        }
-
-        function renderProductGrid(katalog) {
-            const container = document.getElementById('katalog-grid');
-            if (!container) return;
-
-            container.innerHTML = katalog.map((item, index) => `
-                <div class="group produk-item" data-kategori="${item.kategori}"
-                    data-nama="${item.nama}" data-harga="${item.harga_angka}"
-                    data-index="${item.id}"
-                    data-gambar-hitam="${item.gambar_hitam}"
-                    data-gambar-putih="${item.gambar_putih}">
-
-                    <a href="/product/${item.id}" class="aspect-square bg-gray-100 mb-2 overflow-hidden rounded-md relative block cursor-pointer">
-                        <img id="produk-img-${item.id}" src="${item.gambar_hitam}" alt="${item.nama}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                    </a>
-
-                    <div class="flex items-center gap-1.5 mb-2">
-                        <button type="button" onclick="pilihWarna('${item.id}', '${item.gambar_hitam}', this)" class="w-4 h-4 rounded-full bg-black ring-2 ring-black ring-offset-1 hover:scale-110 transition cursor-pointer"></button>
-                        <button type="button" onclick="pilihWarna('${item.id}', '${item.gambar_putih}', this)" class="w-4 h-4 rounded-full bg-white border border-gray-300 hover:scale-110 transition cursor-pointer"></button>
-                    </div>
-
-                    <a href="/product/${item.id}" class="block">
-                        <h3 class="text-xs md:text-sm font-medium text-gray-900 group-hover:underline">${item.nama}</h3>
-                    </a>
-                    <p class="text-[11px] text-gray-400">${item.kategori}</p>
-                    <p class="text-xs font-semibold mt-1">${item.harga}</p>
-                </div>
-            `).join('');
-
-            applyFiltersAndSort();
         }
 
         function openFilterDrawer() {
@@ -714,12 +671,25 @@
 
         function filterKategori(kategori, element) {
             currentKategori = kategori;
+
+            // Sinkronkan juga checkbox di dalam drawer jika kategori utama diklik
+            document.querySelectorAll('.drawer-cat-checkbox').forEach(cb => {
+                if (kategori === 'All') {
+                    cb.checked = false;
+                } else if (cb.value === kategori) {
+                    cb.checked = true;
+                } else {
+                    cb.checked = false; // Opsional: matikan yang lain supaya sinkron
+                }
+            });
+
             const buttons = document.querySelectorAll('.btn-kategori');
             buttons.forEach(btn => btn.className =
                 'btn-kategori bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-black hover:text-white active:scale-95 transition duration-200'
             );
             element.className =
                 'btn-kategori bg-black text-white px-4 py-2 rounded-md active:scale-95 transition duration-150';
+
             applyFiltersAndSort();
         }
 
@@ -884,6 +854,7 @@
             window.location.href = "{{ route('search.page') }}?q=" + encodeURIComponent(tagText);
         }
 
+        // PERBAIKAN LOGIKA FILTER DAN SORT SUPAYA TIDAK BENTROK
         function applyFiltersAndSort() {
             const sortVal = document.getElementById('sort-select').value;
             const container = document.getElementById('katalog-grid');
@@ -897,46 +868,23 @@
             let visibleCount = 0;
 
             items.forEach(item => {
-                const index = item.getAttribute('data-index');
-                const imgHitam = item.getAttribute('data-gambar-hitam');
-                const imgPutih = item.getAttribute('data-gambar-putih');
-                const imgElement = document.getElementById('produk-img-' + index);
-
-                const parentBox = item.querySelector('.flex.items-center.gap-1\\.5');
-                const btnHitam = parentBox ? parentBox.querySelectorAll('button')[0] : null;
-                const btnPutih = parentBox ? parentBox.querySelectorAll('button')[1] : null;
-
-                if (imgElement) {
-                    if (activeColorFilter === 'White') {
-                        imgElement.src = imgPutih;
-                        if (btnPutih && btnHitam) {
-                            btnPutih.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnHitam.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    } else {
-                        imgElement.src = imgHitam;
-                        if (btnPutih && btnHitam) {
-                            btnHitam.classList.add('ring-2', 'ring-black', 'ring-offset-1');
-                            btnPutih.classList.remove('ring-2', 'ring-black', 'ring-offset-1');
-                        }
-                    }
-                }
-
                 const itemKategori = item.getAttribute('data-kategori');
 
-                let matchesPillCategory = false;
-                if (currentKategori === 'All') {
-                    matchesPillCategory = true;
-                } else if (itemKategori === currentKategori) {
-                    matchesPillCategory = true;
-                }
+                // Perbaikan Logika Filter Kategori (Mendukung tombol pill utama DAN checkbox drawer sekaligus secara fleksibel)
+                let matchesCategory = false;
 
-                let matchesDrawerCategory = true;
                 if (selectedDrawerCats.length > 0) {
-                    matchesDrawerCategory = selectedDrawerCats.includes(itemKategori);
+                    // Jika ada checkbox di drawer yang dipilih, utamakan filter drawer
+                    matchesCategory = selectedDrawerCats.includes(itemKategori);
+                } else if (currentKategori !== 'All') {
+                    // Jika tidak ada di drawer, cek kategori pill utama
+                    matchesCategory = (itemKategori === currentKategori);
+                } else {
+                    // Jika posisi di 'All' dan tidak ada checkbox drawer
+                    matchesCategory = true;
                 }
 
-                if (matchesPillCategory && matchesDrawerCategory) {
+                if (matchesCategory) {
                     item.style.display = 'block';
                     visibleCount++;
                 } else {

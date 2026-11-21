@@ -73,7 +73,7 @@
                         <x-input-error :messages="$errors->get('email')" class="mt-1" />
                     </div>
 
-                    <!-- Password dengan Tombol Mata Interaktif -->
+                    <!-- Password dengan Tombol Mata Interaktif & Keterangan -->
                     <div class="space-y-1">
                         <label for="password" class="block text-xs text-gray-600 font-medium">Password</label>
                         <div class="relative">
@@ -90,6 +90,9 @@
                                 </svg>
                             </button>
                         </div>
+                        <!-- Keterangan / Petunjuk Password -->
+                        <p class="text-[11px] text-gray-400 mt-1">Kata Sandi Anda harus memiliki setidaknya 8 karakter, Kombinasi huruf besar,
+                            Angka, dan Simbol.</p>
                         <x-input-error :messages="$errors->get('password')" class="mt-1" />
                     </div>
 
@@ -113,7 +116,13 @@
                                 </svg>
                             </button>
                         </div>
-                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
+                        <!-- Error message khusus untuk konfirmasi password -->
+                        @error('password_confirmation')
+                            <span class="text-[11px] text-red-600 mt-1 block">Konfirmasi sandi tidak cocok, pastikan sandi
+                                sama persis cuy.</span>
+                        @else
+                            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
+                        @enderror
                     </div>
 
                     <!-- Tombol Sign Up -->

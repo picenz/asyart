@@ -9,15 +9,15 @@ class ApparelController extends Controller
     private $katalog = [
         [
             'id' => 0,
-            'nama' => 'Crop Top Bang Windah',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Bang Windah',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp90.000',
             'gambar_hitam' => 'windahcrop-htm.jpg',
             'gambar_putih' => 'windahcrop-pth.jpg'
         ],
         [
             'id' => 1,
-            'nama' => 'Regular Tee Bocil Bang Windah',
+            'nama' => 'Short Sleeve Bocil Bang Windah',
             'kategori' => 'Short Sleeve',
             'harga' => 'Rp85.000',
             'gambar_hitam' => 'windahreg-htm.jpg',
@@ -33,39 +33,39 @@ class ApparelController extends Controller
         ],
         [
             'id' => 3,
-            'nama' => 'Crop Top Snoopy',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Snoopy',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp90.000',
             'gambar_hitam' => 'snpcrop-htm.jpg',
             'gambar_putih' => 'snpcrop-pth.jpg'
         ],
         [
             'id' => 4,
-            'nama' => 'Crop Top Radio Head',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Radio Head',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp85.000',
             'gambar_hitam' => 'radiocrop-htm.jpg',
             'gambar_putih' => 'radiocrop-pth.jpg'
         ],
         [
             'id' => 5,
-            'nama' => 'Crop Top Cake',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Cake',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp110.000',
             'gambar_hitam' => 'cakecrop-htm.jpg',
             'gambar_putih' => 'cakecrop-pth.jpg'
         ],
         [
             'id' => 6,
-            'nama' => 'Crop Top Blue Star Fish',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Blue Star Fish',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp95.000',
             'gambar_hitam' => 'ikanbirucrop-htm.jpg',
             'gambar_putih' => 'ikanbirucrop-pth.jpg'
         ],
         [
             'id' => 7,
-            'nama' => 'Regular Tee Circle Fish',
+            'nama' => 'Short Sleeve Circle Fish',
             'kategori' => 'Short Sleeve',
             'harga' => 'Rp85.000',
             'gambar_hitam' => 'ikanbulatreg-htm.jpg',
@@ -81,16 +81,16 @@ class ApparelController extends Controller
         ],
         [
             'id' => 9,
-            'nama' => 'Crop Top Snoopy & Bang Windah',
-            'kategori' => 'Crop Top',
+            'nama' => 'Baby Tee Snoopy & Bang Windah',
+            'kategori' => 'Baby Tee',
             'harga' => 'Rp75.000',
             'gambar_hitam' => 'npcrop-htm.jpg',
             'gambar_putih' => 'npcrop-pth.jpg'
         ],
         [
             'id' => 10,
-            'nama' => 'Regular Tee Bocil Sigma',
-            'kategori' => 'Regular Tee',
+            'nama' => 'Short Sleeve Bocil Sigma',
+            'kategori' => 'Short Sleeve',
             'harga' => 'Rp90.000',
             'gambar_hitam' => 'bclreg-htm.jpg',
             'gambar_putih' => 'bclreg-pth.jpg'
@@ -114,11 +114,12 @@ class ApparelController extends Controller
     public function search(Request $request)
     {
         $keyword = $request->input('q');
-        $query = $keyword; // Alias agar kompatibel dengan view search
+        $query = $keyword;
 
-        // Filter produk berdasarkan keyword pencarian
+        // Filter produk berdasarkan keyword pencarian (nama atau kategori)
         $results = collect($this->katalog)->filter(function ($item) use ($keyword) {
             if (empty($keyword)) return false;
+
             return str_contains(strtolower($item['nama']), strtolower($keyword)) ||
                 str_contains(strtolower($item['kategori']), strtolower($keyword));
         });
@@ -128,7 +129,7 @@ class ApparelController extends Controller
 
     public function cart()
     {
-        return view('cart'); // Mengarah ke view bag/cart yang konsisten
+        return view('cart');
     }
 
     public function show($id)

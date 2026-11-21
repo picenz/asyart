@@ -85,9 +85,29 @@
                     <p class="text-xs text-gray-500">View and track all your completed or ongoing orders</p>
                 </div>
 
+                @php
+                    // =====================================================================
+                    // FLAG STATUS RATING PER ORDER (Siap di-config BE / Controller)
+                    // Masukkan order_id yang sudah pernah diberi rating ke array di bawah
+                    // =====================================================================
+                    $ratedOrderIds = $ratedOrderIds ?? [];
+                @endphp
+
                 <!-- LIST ORDERS -->
                 <div class="space-y-6">
                     @forelse($orders as $order)
+                        @php
+                            $statusText = $order->status ?? 'Processing';
+                            $isFinishedOrder = in_array(strtolower($statusText), ['completed', 'delivered', 'selesai']);
+                            $isAlreadyRated =
+                                in_array($order->id, $ratedOrderIds) || (bool) ($order->is_rated ?? false);
+
+                            // Ambil product_id pertama dari items_json jika ada, fallback ke 0
+                            $decodedItems = json_decode($order->items_json ?? '[]', true);
+                            $targetProductId =
+                                $order->product_id ?? ($decodedItems[0]['id'] ?? ($decodedItems[0]['product_id'] ?? 0));
+                        @endphp
+
                         <!-- Order Card Dinamis -->
                         <div class="border border-gray-200 rounded-lg p-5 space-y-4 shadow-sm bg-white">
                             <div class="flex items-center justify-between border-b border-gray-100 pb-3 text-xs">
@@ -98,8 +118,8 @@
                                         {{ $order->created_at->format('d M Y') }}</p>
                                 </div>
                                 <span
-                                    class="text-[10px] font-semibold px-2.5 py-1 rounded {{ ($order->status ?? 'Processing') == 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
-                                    {{ $order->status ?? 'Processing' }}
+                                    class="text-[10px] font-semibold px-2.5 py-1 rounded {{ $isFinishedOrder ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                                    {{ $statusText }}
                                 </span>
                             </div>
 
@@ -111,9 +131,29 @@
                             </div>
 
                             <!-- Footer Card Order (Action & Total Terpisah Sempurna) -->
-                            <div class="flex items-center justify-between pt-3 border-t border-gray-100 text-xs">
-                                <a href="{{ route('profile.order.detail', $order->id) }}"
-                                    class="hover:underline font-medium text-black">View details →</a>
+                            <div
+                                class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100 text-xs">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <a href="{{ route('profile.order.detail', $order->id) }}"
+                                        class="hover:underline font-medium text-black">View details →</a>
+
+                                    @if ($isAlreadyRated)
+                                        <span
+                                            class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                                            Produk sudah diberi rating / ulasan
+                                        </span>
+                                    @elseif ($isFinishedOrder)
+                                        <a href="{{ route('product.reviews', ['id' => $targetProductId]) }}"
+                                            class="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-[11px] font-medium text-white hover:bg-gray-800 transition">
+                                            Rating Pesanan Anda
+                                        </a>
+                                    @else
+                                        <span class="text-[11px] text-gray-400">
+                                            Bisa di-rating setelah pesanan selesai
+                                        </span>
+                                    @endif
+                                </div>
+
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400">Total</span>
                                     <span

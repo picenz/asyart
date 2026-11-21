@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Orders;
+use App\Http\Controllers\ReviewPageController;
 
 // --- RUTE UTAMA E-COMMERCE (APPAREL) ---
 Route::get('/', [ApparelController::class, 'index'])->name('home');
@@ -113,12 +114,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/products/{id}/edit', function () {
             return view('admin.products.edit');
-        })->name('admin.products.edit');
+        })->name('products.edit');
 
         // Rute Hapus Produk
         Route::delete('/products/{id}', function ($id) {
             return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
-        })->name('admin.products.destroy');
+        })->name('products.destroy');
 
         // Rute QRIS Transactions Admin (Index & Detail)
         Route::get('/qris', function () {
@@ -128,6 +129,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/qris/{id}', function ($id) {
             return view('admin.qris-detail');
         })->name('qris.detail');
+
+        // Rute Ratings Admin (Index)
+        Route::get('/ratings', function () {
+            return view('admin.ratings');
+        })->name('ratings.index');
 
         Route::get('/settings', function () {
             return view('admin.settings');
@@ -171,6 +177,10 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect('/');
 })->middleware('auth')->name('logout');
+
+// --- RUTE REVIEW PRODUK ---
+Route::get('/product/{id}/reviews', [ReviewPageController::class, 'index'])
+    ->name('product.reviews');
 
 // --- REQUIRE AUTH ROUTES BREEZE ---
 require __DIR__ . '/auth.php';

@@ -9,6 +9,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
+@php
+    // =========================================================================
+    // FLAG STATUS ORDER USER UNTUK PRODUK INI (Siap di-config BE / Controller)
+    // - true  : user sudah pernah memesan produk ini -> boleh akses Write a review
+    // - false : user belum pernah memesan produk ini -> muncul popup saat klik Write a review
+    // =========================================================================
+    $hasOrdered = $hasOrdered ?? false;
+@endphp
+
 <body class="bg-white text-gray-900 font-sans relative overflow-x-hidden">
 
     <!-- SEARCH BACKDROP (Z-INDEX 40 SUPAYA MENAHAN KLIK LAYAR BELAKANG) -->
@@ -209,7 +218,7 @@
                 </div>
 
                 <!-- KANAN: INFORMASI & AKSI PRODUK -->
-                <div class="space-y-6 text-xs text-gray-800">
+                <div id="product-purchase-section" class="space-y-6 text-xs text-gray-800">
                     <div>
                         <h1 id="product-title-heading"
                             class="text-2xl md:text-3xl font-serif font-medium text-gray-900 mb-1">
@@ -325,10 +334,11 @@
                         <div class="text-black">★★★★★</div>
                     </div>
                     <p class="text-xs text-gray-500">Based on 128 verified customer reviews</p>
-                    <button type="button" onclick="alert('Form tulis ulasan akan segera dibuka!')"
-                        class="border border-black bg-black text-white px-5 py-2.5 rounded text-xs font-medium hover:bg-gray-800 transition">
+                    <button type="button" id="write-review-btn" onclick="handleWriteReviewClick()"
+                        class="mt-4 inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 transition cursor-pointer">
                         Write a review
                     </button>
+                    <p id="review-order-status-note" class="text-[11px] text-gray-500 leading-relaxed"></p>
                 </div>
 
                 <div id="dynamic-reviews-container" class="md:col-span-2 space-y-6"></div>
@@ -342,8 +352,103 @@
         </div>
     </main>
 
+    <!-- POPUP MODAL JIKA BELUM PERNAH ORDER PRODUK INI -->
+    <div id="order-required-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-xs" role="dialog"
+        aria-modal="true" aria-labelledby="order-required-title">
+        <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <span
+                        class="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
+                        Belum Ada Riwayat Pesanan
+                    </span>
+                    <h3 id="order-required-title" class="mt-2 text-lg font-bold text-gray-900">
+                        Silakan Pesan Produk Ini Terlebih Dahulu
+                    </h3>
+                </div>
+                <button type="button" onclick="closeOrderRequiredModal()"
+                    class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-black transition cursor-pointer"
+                    aria-label="Tutup popup">
+                    ×
+                </button>
+            </div>
+
+            <p class="text-xs leading-relaxed text-gray-600">
+                Kamu belum pernah memesan produk ini. Silakan pesan produk ini terlebih dahulu sebelum menulis rating
+                dan ulasan (1x kesempatan rating per item yang dibeli).
+            </p>
+
+            <div class="pt-2 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <button type="button" onclick="closeOrderRequiredModal()"
+                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer">
+                    Tutup
+                </button>
+                <button type="button" onclick="scrollToPurchaseSection()"
+                    class="rounded-md bg-black px-4 py-2 text-xs font-medium text-white hover:bg-gray-800 transition cursor-pointer">
+                    Pesan Produk Ini
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT JAVASCRIPT MASTER UTAMA -->
     <script>
+        const hasOrderedProduct = @json($hasOrdered);
+        const reviewPageUrl = "{{ route('product.reviews', ['id' => $product['id']]) }}";
+
+        function renderReviewOrderStatusNote() {
+            const noteEl = document.getElementById('review-order-status-note');
+            if (!noteEl) return;
+
+            if (!hasOrderedProduct) {
+                noteEl.textContent = 'Belum pernah dipesan — pesan produk ini dulu untuk beri rating.';
+                noteEl.className = 'text-[11px] text-amber-700 leading-relaxed';
+            } else {
+                noteEl.textContent = 'Sudah pernah dipesan — kamu bisa beri rating (1x per item).';
+                noteEl.className = 'text-[11px] text-emerald-700 leading-relaxed';
+            }
+        }
+
+        function handleWriteReviewClick() {
+            if (!hasOrderedProduct) {
+                openOrderRequiredModal();
+                return;
+            }
+            window.location.href = reviewPageUrl;
+        }
+
+        function openOrderRequiredModal() {
+            const modal = document.getElementById('order-required-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeOrderRequiredModal() {
+            const modal = document.getElementById('order-required-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function scrollToPurchaseSection() {
+            closeOrderRequiredModal();
+            const target = document.getElementById('product-purchase-section');
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+
+        document.getElementById('order-required-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'order-required-modal') {
+                closeOrderRequiredModal();
+            }
+        });
+
         // Database Stok Master Lengkap & Presisi Per Produk
         const productStockData = {
             "Baby Tee Bang Windah": {
@@ -560,6 +665,7 @@
                 }
             }
 
+            renderReviewOrderStatusNote();
             updateCartCountUI();
             renderSizeOptions();
             updateStockUI();
