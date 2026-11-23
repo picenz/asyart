@@ -208,7 +208,24 @@ Route::put('/account/profile', [AccountController::class, 'updateProfile'])
     ->name('account.profile.update');
 
 Route::put('/account/password', [AccountController::class, 'updatePassword'])
-    ->name('account.password.update');e('account');
+    ->name('account.password.update');
+
+Route::delete('/account/devices/{sessionId}', [AccountController::class, 'destroyDevice'])
+    ->name('account.devices.destroy');
+
+Route::delete('/account/devices', [AccountController::class, 'destroyOtherDevices'])
+    ->name('account.devices.destroy-others');
+
+Route::get('/session-check', function (\Illuminate\Http\Request $request) {
+    $count = \Illuminate\Support\Facades\DB::table('sessions')
+        ->where('user_id', $request->user()->id)
+        ->count();
+
+    return response()->json([
+        'authenticated' => true,
+        'session_count' => $count,
+    ]);
+})->name('session.check');
     });
 });
 

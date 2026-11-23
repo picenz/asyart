@@ -140,30 +140,106 @@
             </form>
         </div>
 
-        <!-- SECTION 3: SESSIONS -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
-            <div>
-                <h2 class="text-sm font-bold text-gray-900">Sessions</h2>
-                <p class="text-[11px] text-gray-500 mt-0.5">You're signed in on this device. Sign out everywhere if you
-                    think someone else has access.</p>
-            </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+        <!-- ALERT NOTIFIKASI -->
+        @if (session('success'))
+            <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <!-- SECTION 3: ACTIVE DEVICES / SESSIONS -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold text-gray-900">Chrome on macOS · Jakarta</p>
-                    <p class="text-[11px] text-emerald-600 font-medium flex items-center gap-1.5 mt-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active now
+                    <h2 class="text-sm font-bold text-gray-900">Active Devices & Sessions</h2>
+                    <p class="text-[11px] text-gray-500 mt-0.5">
+                        Manage devices currently signed in to your admin account. Remove any unfamiliar device immediately.
                     </p>
                 </div>
-                <div>
-                    <form action="#" method="POST">
+
+                @if ($sessions->where('is_current_device', false)->count() > 0)
+                    <form action="{{ route('admin.account.devices.destroy-others') }}" method="POST"
+                        onsubmit="return confirm('Keluarkan semua perangkat lain yang sedang login?');">
                         @csrf
+                        @method('DELETE')
                         <button type="submit"
                             class="px-3.5 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm">
-                            Sign out of all devices
+                            Sign out of all other devices
                         </button>
                     </form>
-                </div>
+                @endif
+            </div>
+
+            <div class="divide-y divide-gray-100 border-t border-gray-100">
+                @forelse ($sessions as $session)
+                    <div class="py-4 first:pt-4 last:pb-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="flex items-start gap-3">
+                            <!-- Icon Desktop / Mobile -->
+                            <div class="p-2 rounded-lg bg-gray-100 text-gray-700 mt-0.5">
+                                @if ($session->is_mobile)
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                @endif
+                            </div>
+
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs font-semibold text-gray-900">
+                                        {{ $session->browser }} on {{ $session->platform }}
+                                    </p>
+                                    @if ($session->is_current_device)
+                                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                                            This device
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <p class="text-[11px] text-gray-500 mt-0.5">
+                                    IP: {{ $session->ip_address }} ·
+                                    @if ($session->is_current_device)
+                                        <span class="text-emerald-600 font-medium">Active now</span>
+                                    @else
+                                        Last active {{ $session->last_active }}
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            @if ($session->is_current_device)
+                                <span class="text-[11px] text-gray-400 font-medium">Current session</span>
+                            @else
+                                <form action="{{ route('admin.account.devices.destroy', $session->id) }}" method="POST"
+                                    onsubmit="return confirm('Hapus dan keluarkan sesi perangkat ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-50 transition">
+                                        Remove device
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <p class="py-4 text-xs text-gray-500">
+                        Belum ada sesi aktif yang tercatat. Pastikan <code>SESSION_DRIVER=database</code> di file <code>.env</code>.
+                    </p>
+                @endforelse
             </div>
         </div>
 

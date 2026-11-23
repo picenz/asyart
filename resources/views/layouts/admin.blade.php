@@ -163,6 +163,40 @@
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+    let initialSessionCount = null;
+
+    setInterval(async () => {
+        try {
+            const res = await fetch("{{ route('admin.session.check') }}", {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 401 || res.status === 419 || res.redirected) {
+                window.location.href = "{{ route('login') }}";
+                return;
+            }
+
+            if (res.ok) {
+                const data = await res.json();
+                if (initialSessionCount === null) {
+                    initialSessionCount = data.session_count;
+                } else if (data.session_count !== initialSessionCount) {
+                    // Jika jumlah device berubah (ada yang baru login) dan user sedang di halaman Account, otomatis reload
+                    if (window.location.pathname.includes('/admin/account')) {
+                        window.location.reload();
+                    }
+                    initialSessionCount = data.session_count;
+                }
+            }
+        } catch (e) {
+            // Abaikan jika koneksi terputus sementara
+        }
+    }, 3000);
+</script>
+
 </body>
 
 </html>

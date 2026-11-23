@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 
 class LoginOtpController extends Controller
 {
@@ -26,17 +25,16 @@ class LoginOtpController extends Controller
                 ->withErrors(['email' => 'OTP kedaluwarsa. Silakan login lagi.']);
         }
 
-        return view('auth.verify-otp');
+        $userId = $request->session()->get('login_otp_user_id');
+        $resendKey = 'otp-resend:' . $userId . '|' . $request->ip();
+        $resendCooldown = RateLimiter::availableIn($resendKey);
+
+        return view('auth.verify-otp', compact('resendCooldown'));
     }
 
     public function verify(Request $request)
     {
-        $request->validate([
-            'otp' => ['required', 'digits:6'],
-        ]);
-
         $userId = $request->session()->get('login_otp_user_id');
-        $key = 'otp-attempts:' . $request->session()->getId();
 
         if (!$userId || $request->session()->get('login_otp_expires_at', 0) < time()) {
             $this->clearOtp($request);
@@ -45,20 +43,43 @@ class LoginOtpController extends Controller
                 ->withErrors(['email' => 'OTP kedaluwarsa. Silakan login lagi.']);
         }
 
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            $this->clearOtp($request);
+        $otpKey       = 'otp-verify-attempt:' . $userId . '|' . $request->ip();
+        $ipKey        = 'login-ip-attempt:' . $request->ip();
+        $maxAttempts  = 5;
+        $decaySeconds = 60; // Ban 1 menit (60 detik)
 
-            return redirect()->route('login')
-                ->withErrors(['email' => 'Terlalu banyak percobaan. Silakan login lagi.']);
+        if (RateLimiter::tooManyAttempts($otpKey, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($otpKey);
+
+            return back()
+                ->with('ban_seconds', $seconds)
+                ->withErrors([
+                    'otp' => "Terlalu banyak percobaan OTP gagal (5x). Silakan tunggu {$seconds} detik lagi.",
+                ]);
         }
 
-        RateLimiter::hit($key, 300);
+        $request->validate([
+            'otp' => ['required', 'digits:6'],
+        ]);
 
         $storedHash = $request->session()->get('login_otp_hash', '');
 
         if (!$storedHash || !Hash::check($request->otp, $storedHash)) {
+            RateLimiter::hit($otpKey, $decaySeconds);
+            RateLimiter::hit($ipKey, $decaySeconds);
+
+            if (RateLimiter::tooManyAttempts($otpKey, $maxAttempts)) {
+                return back()
+                    ->with('ban_seconds', $decaySeconds)
+                    ->withErrors([
+                        'otp' => "Anda telah 5x salah memasukkan kode OTP. Akun dikunci sementara selama {$decaySeconds} detik.",
+                    ]);
+            }
+
+            $remaining = max(0, $maxAttempts - RateLimiter::attempts($otpKey));
+
             return back()->withErrors([
-                'otp' => 'Kode OTP salah.',
+                'otp' => "Kode OTP salah. Sisa percobaan: {$remaining}x lagi sebelum diblokir 1 menit.",
             ]);
         }
 
@@ -72,7 +93,8 @@ class LoginOtpController extends Controller
         }
 
         $this->clearOtp($request);
-        RateLimiter::clear($key);
+        RateLimiter::clear($otpKey);
+        RateLimiter::clear($ipKey);
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -92,15 +114,24 @@ class LoginOtpController extends Controller
             return redirect()->route('login');
         }
 
-        $key = 'otp-resend:' . $request->session()->getId();
-
-        if (RateLimiter::tooManyAttempts($key, 3)) {
-            return back()->withErrors([
-                'otp' => 'Terlalu banyak meminta OTP. Coba lagi nanti.',
-            ]);
+        $otpKey = 'otp-verify-attempt:' . $userId . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($otpKey, 5)) {
+            $seconds = RateLimiter::availableIn($otpKey);
+            return back()
+                ->with('ban_seconds', $seconds)
+                ->withErrors([
+                    'otp' => "Akun sedang diblokir sementara karena 5x salah. Tunggu {$seconds} detik lagi.",
+                ]);
         }
 
-        RateLimiter::hit($key, 300);
+        $resendKey = 'otp-resend:' . $userId . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($resendKey, 1)) {
+            $seconds = RateLimiter::availableIn($resendKey);
+            return back()->withErrors([
+                'otp' => "Silakan tunggu {$seconds} detik sebelum meminta kode OTP baru.",
+            ]);
+        }
 
         $user = User::find($userId);
 
@@ -126,13 +157,32 @@ class LoginOtpController extends Controller
             'login_otp_expires_at' => time() + 300,
         ]);
 
-        Mail::raw(
-            "Kode OTP login ASYART kamu: {$otp}\nKode ini berlaku selama 5 menit. Jangan bagikan kode ini kepada siapa pun.",
-            function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject('Kode OTP Login ASYART');
-            }
-        );
+        // Set cooldown 60 detik untuk tombol Kirim Ulang OTP setiap kali OTP dikirim
+        $resendKey = 'otp-resend:' . $user->id . '|' . $request->ip();
+        RateLimiter::clear($resendKey);
+        RateLimiter::hit($resendKey, 60);
+
+        $htmlBody = "
+        <div style='font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff;'>
+            <div style='text-align: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 20px;'>
+                <h2 style='margin: 0; letter-spacing: 3px; font-family: Georgia, serif; color: #111827;'>ASYART.MERCH</h2>
+                <p style='margin: 4px 0 0; font-size: 12px; color: #6b7280;'>Verifikasi Keamanan Login</p>
+            </div>
+            <p style='font-size: 14px; color: #374151; line-height: 1.5;'>Halo <strong>{$user->name}</strong>,</p>
+            <p style='font-size: 14px; color: #374151; line-height: 1.5;'>Gunakan kode OTP 6 digit berikut untuk menyelesaikan proses masuk ke akun ASYART.MERCH kamu:</p>
+            <div style='margin: 24px 0; padding: 16px; background-color: #f9fafb; border: 1px dashed #9ca3af; border-radius: 6px; text-align: center;'>
+                <span style='font-family: monospace; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #000000;'>{$otp}</span>
+            </div>
+            <p style='font-size: 12px; color: #6b7280; line-height: 1.5;'>Kode ini hanya berlaku selama <strong>5 menit</strong>. Demi keamanan akun, jangan pernah membagikan kode ini kepada siapa pun.</p>
+            <hr style='border: none; border-top: 1px solid #f3f4f6; margin: 20px 0;'>
+            <p style='font-size: 11px; color: #9ca3af; text-align: center; margin: 0;'>&copy; " . date('Y') . " ASYART.MERCH. All rights reserved.</p>
+        </div>
+        ";
+
+        Mail::html($htmlBody, function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject('Kode Verifikasi OTP Login - ASYART.MERCH');
+        });
     }
 
     private function clearOtp(Request $request): void

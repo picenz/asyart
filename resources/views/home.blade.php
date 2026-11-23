@@ -56,7 +56,7 @@
 
                 <!-- SEARCH BAR DESKTOP -->
                 <div class="hidden md:block w-[450px] relative">
-                    <form action="{{ route('search') }}" method="GET" class="relative flex items-center">
+                    <form action="{{ route('search') }}" method="GET" onsubmit="handleSearchSubmit(this)" class="w-full relative">
                         <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,7 +105,7 @@
 
         <!-- SEARCH BAR KHUSUS MOBILE -->
         <div class="px-4 py-2 md:hidden bg-white border-b border-gray-100 relative">
-            <form action="{{ route('search') }}" method="GET" class="w-full relative">
+            <form action="{{ route('search') }}" method="GET" onsubmit="handleSearchSubmit(this)" class="relative flex items-center">
                 <div class="relative flex items-center">
                     <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +408,8 @@
 
     <script>
         let currentKategori = 'All';
-        let recentSearches = ['Long Sleeve', 'Baby Tee', 'Baby Tee Bang Windah'];
+        const RECENT_STORAGE_KEY = 'asyart_recent_searches';
+        let recentSearches = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || '["Long Sleeve", "Baby Tee"]');
         let activeColorFilter = null;
         let scrollPosition = 0;
         let filterOpen = false;
@@ -452,10 +453,18 @@
         }
 
         function getSearchValue() {
-            const d = document.getElementById('search-input');
-            const m = document.getElementById('search-input-mobile');
-            return document.activeElement === m ? m.value : (d ? d.value : '');
-        }
+         const d = document.getElementById('search-input');
+         const m = document.getElementById('search-input-mobile');
+         if (document.activeElement === m) return m.value;
+         if (document.activeElement === d) return d.value;
+         return (d && d.value.trim() !== '') ? d.value : (m ? m.value : '');
+     }
+
+     function handleSearchSubmit(formEl) {
+         const inputEl = formEl ? formEl.querySelector('input[name="q"]') : null;
+         const q = inputEl ? inputEl.value.trim() : getSearchValue().trim();
+         if (q) saveRecentSearch(q);
+     }
 
         // ---------- Scroll lock ----------
         function lockScroll() {
@@ -666,6 +675,8 @@
             document.getElementById('search-backdrop').classList.remove('hidden');
             syncScrollLock();
 
+            recentSearches = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || '["Long Sleeve", "Baby Tee"]');
+            renderRecentSearches();
             renderSuggestions(getSearchValue());
         }
 
@@ -735,13 +746,24 @@
             `).join('');
         }
 
+        function saveRecentSearch(term) {
+            const clean = String(term || '').trim();
+            if (!clean) return;
+            recentSearches = recentSearches.filter(item => item.toLowerCase() !== clean.toLowerCase());
+            recentSearches.unshift(clean);
+            if (recentSearches.length > 5) recentSearches.pop();
+            localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recentSearches));
+        }
+
         function removeRecentSearch(idx) {
             recentSearches.splice(idx, 1);
+            localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recentSearches));
             renderRecentSearches();
         }
 
         function clearAllRecentSearches() {
             recentSearches = [];
+            localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recentSearches));
             renderRecentSearches();
         }
 
@@ -796,17 +818,15 @@
             if (desktopInput) desktopInput.value = tagText;
             if (mobileInput) mobileInput.value = tagText;
 
-            if (!recentSearches.includes(tagText)) {
-                recentSearches.unshift(tagText);
-                if (recentSearches.length > 5) recentSearches.pop();
-                renderRecentSearches();
-            }
+            saveRecentSearch(tagText);
+            renderRecentSearches();
 
             window.location.href = "{{ route('search') }}?q=" + encodeURIComponent(tagText);
         }
 
         function viewAllResults() {
             const q = getSearchValue().trim();
+            if (q) saveRecentSearch(q);
             window.location.href = "{{ route('search') }}?q=" + encodeURIComponent(q);
         }
 

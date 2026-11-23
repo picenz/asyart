@@ -50,6 +50,12 @@
 
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
+                @if (session('ban_seconds'))
+                    <div id="ban-alert" class="p-3 rounded border border-red-200 bg-red-50 text-xs text-red-700 text-center font-medium">
+                        Terlalu banyak percobaan gagal. Silakan tunggu <span id="ban-countdown" class="font-bold">{{ session('ban_seconds') }}</span> detik lagi.
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login') }}" class="space-y-4">
                     @csrf
 
@@ -128,7 +134,8 @@
                     </div>
 
                     <button type="submit"
-                            class="w-full bg-black text-white text-sm py-3 rounded font-medium hover:bg-gray-800 transition">
+                            id="btn-login-submit"
+                            class="w-full bg-black text-white text-sm py-3 rounded font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed">
                         Sign in
                     </button>
                 </form>
@@ -174,6 +181,37 @@
                 icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
             }
         }
+
+        // Cooldown 60 detik real-time & disable tombol login
+        document.addEventListener('DOMContentLoaded', () => {
+            let banSeconds = {{ (int) session('ban_seconds', 0) }};
+            const btnSubmit = document.getElementById('btn-login-submit');
+            const countdownEl = document.getElementById('ban-countdown');
+            const banAlert = document.getElementById('ban-alert');
+
+            if (banSeconds > 0 && btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = `Tunggu (${banSeconds}s)`;
+
+                const timer = setInterval(() => {
+                    banSeconds--;
+
+                    if (banSeconds > 0) {
+                        if (countdownEl) countdownEl.textContent = banSeconds;
+                        btnSubmit.textContent = `Tunggu (${banSeconds}s)`;
+                    } else {
+                        clearInterval(timer);
+                        btnSubmit.disabled = false;
+                        btnSubmit.textContent = 'Sign in';
+                        if (banAlert) {
+                            banAlert.classList.remove('border-red-200', 'bg-red-50', 'text-red-700');
+                            banAlert.classList.add('border-green-200', 'bg-green-50', 'text-green-700');
+                            banAlert.textContent = 'Masa tunggu selesai. Silakan coba login kembali.';
+                        }
+                    }
+                }, 1000);
+            }
+        });
     </script>
 </body>
 </html>
