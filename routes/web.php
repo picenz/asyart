@@ -159,6 +159,41 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/orders', [ProfileController::class, 'orders'])->name('profile.orders');
     Route::get('/profile/orders/{id}', [ProfileController::class, 'orderDetail'])->name('profile.order.detail');
 
+    // Rute Edit, Update, & Hapus Rating Pesanan
+    Route::get('/profile/orders/{id}/rating/edit', function ($id) {
+        $order = Orders::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        return view('orders.rating-edit', compact('order'));
+    })->name('orders.rating.edit');
+
+    Route::put('/profile/orders/{id}/rating', function (Request $request, $id) {
+        $order = Orders::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'review' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        return redirect()
+            ->route('profile.orders')
+            ->with('success', 'Rating pesanan #' . ($order->order_number ?? $order->id) . ' berhasil diperbarui.');
+    })->name('orders.rating.update');
+
+    Route::delete('/profile/orders/{id}/rating', function (Request $request, $id) {
+        $order = Orders::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // Nanti temen BE tinggal sambungin logic penghapusan rating/ulasan di sini
+        return redirect()
+            ->route('profile.orders')
+            ->with('success', 'Rating pesanan #' . ($order->order_number ?? $order->id) . ' berhasil dihapus.');
+    })->name('orders.rating.destroy');
+
     // Rute List Addresses (Narik dari ProfileController biar data alamat muncul)
     Route::get('/profile/addresses', [ProfileController::class, 'addresses'])->name('profile.addresses');
 

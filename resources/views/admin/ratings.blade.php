@@ -7,6 +7,8 @@
     // - id, code, name, category, average_rating, total_reviews, breakdown (5..1 => %), reviews
     // Tiap review di reviews berisi:
     // - id, customer_name, customer_email, rating, comment, status, created_at
+    // - Detail item pesanan pembeli per komen:
+    //   order_number, color, size, qty, variant_note (opsional)
     // =========================================================================
     $isLoading = $isLoading ?? false;
 
@@ -29,6 +31,11 @@
                         'Bahannya enak dipakai, nggak gerah, dan sablonannya rapi. Worth it banget buat harian.',
                     'status' => 'Published',
                     'created_at' => '2 minggu lalu',
+                    'order_number' => 'RN-84921',
+                    'color' => 'Putih',
+                    'size' => 'M',
+                    'qty' => 2,
+                    'variant_note' => 'Reguler Fit',
                 ],
                 [
                     'id' => 2,
@@ -38,6 +45,11 @@
                     'comment' => 'Cutting-nya cakep dan pas di badan. Pengiriman juga aman sampai tujuan.',
                     'status' => 'Published',
                     'created_at' => '1 minggu lalu',
+                    'order_number' => 'RN-85104',
+                    'color' => 'Hitam',
+                    'size' => 'S',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -58,6 +70,11 @@
                     'comment' => 'Desainnya unik banget, bahan adem buat dipakai keluar seharian.',
                     'status' => 'Published',
                     'created_at' => '6 hari lalu',
+                    'order_number' => 'RN-85219',
+                    'color' => 'Hitam',
+                    'size' => 'L',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -78,6 +95,11 @@
                     'comment' => 'Lengan panjangnya pas, sablon tajam, dan nggak luntur pas dicuci.',
                     'status' => 'Published',
                     'created_at' => '5 hari lalu',
+                    'order_number' => 'RN-85388',
+                    'color' => 'Abu Misty',
+                    'size' => 'M',
+                    'qty' => 2,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -98,6 +120,11 @@
                     'comment' => 'Gemes banget print Snoopy-nya, bahannya lembut dan nyaman.',
                     'status' => 'Published',
                     'created_at' => '4 hari lalu',
+                    'order_number' => 'RN-85402',
+                    'color' => 'Putih',
+                    'size' => 'S',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -118,6 +145,11 @@
                     'comment' => 'Vibe grafisnya dapet banget, fit-nya oke buat dipaduin sama outer.',
                     'status' => 'Published',
                     'created_at' => '3 hari lalu',
+                    'order_number' => 'RN-85510',
+                    'color' => 'Hitam',
+                    'size' => 'XL',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -138,6 +170,11 @@
                     'comment' => 'Lucu banget detail cake-nya, bahannya juga nggak nerawang.',
                     'status' => 'Published',
                     'created_at' => '2 hari lalu',
+                    'order_number' => 'RN-85630',
+                    'color' => 'Cream',
+                    'size' => 'M',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -158,6 +195,11 @@
                     'comment' => 'Warna birunya cakep, bahan adem dan gampang di-mix and match.',
                     'status' => 'Published',
                     'created_at' => '2 hari lalu',
+                    'order_number' => 'RN-85712',
+                    'color' => 'Biru',
+                    'size' => 'S',
+                    'qty' => 2,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -178,6 +220,11 @@
                     'comment' => 'Potongannya santai, enak dipakai buat aktivitas harian.',
                     'status' => 'Published',
                     'created_at' => '1 hari lalu',
+                    'order_number' => 'RN-85801',
+                    'color' => 'Hitam',
+                    'size' => 'L',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -198,6 +245,11 @@
                     'comment' => 'Grafis puffer fish-nya nyentrik tapi tetap clean, bahan nyaman.',
                     'status' => 'Published',
                     'created_at' => '1 hari lalu',
+                    'order_number' => 'RN-85895',
+                    'color' => 'Navy',
+                    'size' => 'M',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -218,6 +270,11 @@
                     'comment' => 'Kolab konsepnya kocak dan pas, kualitas kainnya mantap.',
                     'status' => 'Published',
                     'created_at' => '1 hari lalu',
+                    'order_number' => 'RN-85940',
+                    'color' => 'Putih',
+                    'size' => 'L',
+                    'qty' => 3,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -238,6 +295,11 @@
                     'comment' => 'Sablon jelas, bahan nggak gampang kusut, harga sesuai kualitas.',
                     'status' => 'Published',
                     'created_at' => 'Baru saja',
+                    'order_number' => 'RN-86011',
+                    'color' => 'Hitam',
+                    'size' => 'M',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -258,6 +320,11 @@
                     'comment' => 'Aksen warna oranye-nya seger banget, nyaman dipakai seharian.',
                     'status' => 'Published',
                     'created_at' => 'Baru saja',
+                    'order_number' => 'RN-86088',
+                    'color' => 'Oranye',
+                    'size' => 'S',
+                    'qty' => 1,
+                    'variant_note' => null,
                 ],
             ],
         ],
@@ -294,7 +361,7 @@
                 if (!starOk) return false;
                 if (!q) return true;
     
-                const hay = `${rev.customer_name ?? ''} ${rev.customer_email ?? ''} ${rev.comment ?? ''}`.toLowerCase();
+                const hay = `${rev.customer_name ?? ''} ${rev.customer_email ?? ''} ${rev.comment ?? ''} ${rev.order_number ?? ''} ${rev.color ?? ''} ${rev.size ?? ''} ${rev.qty ?? ''} ${rev.variant_note ?? ''}`.toLowerCase();
                 return hay.includes(q);
             });
         }
@@ -391,7 +458,7 @@
 
             <div class="w-full sm:w-72">
                 <input type="text" name="search" x-model="searchQuery"
-                    placeholder="Cari nama pembeli atau isi ulasan..."
+                    placeholder="Cari nama pembeli, varian, atau ulasan..."
                     class="w-full px-3.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-black focus:bg-white transition">
             </div>
         </div>
@@ -404,6 +471,7 @@
                         <tr
                             class="border-b border-gray-200 bg-gray-50 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                             <th class="py-3 px-4">Pembeli</th>
+                            <th class="py-3 px-4">Item Pesanan</th>
                             <th class="py-3 px-4">Rating</th>
                             <th class="py-3 px-4">Ulasan</th>
                             <th class="py-3 px-4">Tanggal</th>
@@ -416,6 +484,9 @@
                                 <tr class="animate-pulse">
                                     <td class="py-4 px-4">
                                         <div class="h-4 w-28 bg-gray-200 rounded"></div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="h-4 w-32 bg-gray-200 rounded"></div>
                                     </td>
                                     <td class="py-4 px-4">
                                         <div class="h-5 w-12 bg-gray-200 rounded"></div>
@@ -441,23 +512,40 @@
                                             x-text="review.customer_email"></div>
                                     </td>
                                     <td class="py-3.5 px-4 align-top whitespace-nowrap">
+                                        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                                            <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-medium"
+                                                x-text="`Warna: ${review.color ?? '-'}`"></span>
+                                            <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-medium"
+                                                x-text="`Ukuran: ${review.size ?? '-'}`"></span>
+                                            <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-medium"
+                                                x-text="`Qty: ${Number(review.qty ?? 1)}`"></span>
+                                        </div>
+                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
+                                            <span x-show="review.order_number"
+                                                x-text="`Order #${review.order_number}`"></span>
+                                            <span x-show="review.variant_note" x-text="`• ${review.variant_note}`"></span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 align-top whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-900"
                                             x-text="`${Number(review.rating ?? 0)} ★`"></span>
                                     </td>
-                                    <td class="py-3.5 px-4 align-top text-gray-600 max-w-md" x-text="review.comment ?? ''">
+                                    <td class="py-3.5 px-4 align-top text-gray-600 max-w-md"
+                                        x-text="review.comment ?? ''">
                                     </td>
                                     <td class="py-3.5 px-4 align-top text-xs text-gray-500 whitespace-nowrap"
                                         x-text="review.created_at ?? '-'"></td>
                                     <td class="py-3.5 px-4 align-top whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                                        <span
+                                            class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
                                             x-text="review.status ?? 'Published'"></span>
                                     </td>
                                 </tr>
                             </template>
 
                             <tr x-show="filteredReviews.length === 0">
-                                <td colspan="5" class="py-10 px-4 text-center text-sm text-gray-400">
+                                <td colspan="6" class="py-10 px-4 text-center text-sm text-gray-400">
                                     Belum ada ulasan untuk item atau filter yang dipilih.
                                 </td>
                             </tr>

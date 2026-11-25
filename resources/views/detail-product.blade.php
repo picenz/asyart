@@ -232,8 +232,8 @@
                     <!-- Rating Review -->
                     <div class="flex items-center gap-2 pb-4 border-b border-gray-100">
                         <div class="flex text-black">★★★★★</div>
-                        <span class="font-semibold text-gray-900 text-xs">4.9</span>
-                        <span class="text-gray-400 text-[11px]">(128 reviews)</span>
+                        <span id="product-avg-rating-badge" class="font-semibold text-gray-900 text-xs">4.9</span>
+                        <span id="product-review-count-badge" class="text-gray-400 text-[11px]">(128 reviews)</span>
                     </div>
 
                     <!-- Pilih Warna (Colour) -->
@@ -322,23 +322,20 @@
             </div>
         </div>
 
-        <!-- SECTION 1: RATINGS & REVIEWS (ACAK DINAMIS) -->
-        <div class="border-t border-gray-200 pt-12 space-y-8">
-            <h2 class="text-xl md:text-2xl font-serif font-medium">Ratings & reviews</h2>
-
             <div
                 class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start bg-gray-50 p-6 rounded-xl border border-gray-100">
                 <div class="space-y-3">
                     <div class="flex items-baseline gap-3">
-                        <span class="text-4xl font-bold font-serif">4.9</span>
+                        <span id="section-avg-rating" class="text-4xl font-bold font-serif">4.9</span>
                         <div class="text-black">★★★★★</div>
                     </div>
-                    <p class="text-xs text-gray-500">Based on 128 verified customer reviews</p>
-                    <button type="button" id="write-review-btn" onclick="handleWriteReviewClick()"
-                        class="mt-4 inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 transition cursor-pointer">
-                        Write a review
-                    </button>
+                    <p id="section-review-count" class="text-xs text-gray-500">Based on 128 verified customer reviews
+                    </p>
                     <p id="review-order-status-note" class="text-[11px] text-gray-500 leading-relaxed"></p>
+                    <button type="button" onclick="openAllRatingsModal()"
+                        class="text-xs font-medium text-gray-900 underline hover:opacity-75 transition cursor-pointer">
+                        Lihat semua rating (1–5 ★)
+                    </button>
                 </div>
 
                 <div id="dynamic-reviews-container" class="md:col-span-2 space-y-6"></div>
@@ -352,42 +349,38 @@
         </div>
     </main>
 
-    <!-- POPUP MODAL JIKA BELUM PERNAH ORDER PRODUK INI -->
-    <div id="order-required-modal"
-        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-xs" role="dialog"
-        aria-modal="true" aria-labelledby="order-required-title">
-        <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4">
-            <div class="flex items-start justify-between gap-3">
+    <!-- MODAL VIEW ALL RATINGS ALA SHOPEE (BINTANG 1 - 5 PER PRODUK) -->
+    <div id="all-ratings-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-[1px]">
+        <div
+            class="w-full max-w-2xl max-h-[88vh] bg-white rounded-xl border border-gray-200 shadow-2xl flex flex-col overflow-hidden">
+
+            <!-- Header Modal -->
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
                 <div>
-                    <span
-                        class="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900">
-                        Belum Ada Riwayat Pesanan
-                    </span>
-                    <h3 id="order-required-title" class="mt-2 text-lg font-bold text-gray-900">
-                        Silakan Pesan Produk Ini Terlebih Dahulu
+                    <h3 id="modal-ratings-title" class="text-base font-semibold text-gray-900">
+                        Semua Rating & Ulasan — {{ $product['nama'] }}
                     </h3>
+                    <p id="modal-ratings-subtitle" class="text-xs text-gray-500">
+                        Menampilkan seluruh rating produk ini dari bintang 5 sampai bintang 1
+                    </p>
                 </div>
-                <button type="button" onclick="closeOrderRequiredModal()"
-                    class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-black transition cursor-pointer"
-                    aria-label="Tutup popup">
-                    ×
+                <button type="button" onclick="closeAllRatingsModal()"
+                    class="rounded-lg px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-black transition cursor-pointer">
+                    ✕
                 </button>
             </div>
 
-            <p class="text-xs leading-relaxed text-gray-600">
-                Kamu belum pernah memesan produk ini. Silakan pesan produk ini terlebih dahulu sebelum menulis rating
-                dan ulasan (1x kesempatan rating per item yang dibeli).
-            </p>
+            <!-- Filter Tab Bintang 1 - 5 ala Shopee -->
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                <div id="star-filter-container" class="flex flex-wrap items-center gap-2">
+                    <!-- Dirender dinamis lewat JS sesuai jumlah rating tiap bintang pada produk ini -->
+                </div>
+            </div>
 
-            <div class="pt-2 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                <button type="button" onclick="closeOrderRequiredModal()"
-                    class="rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer">
-                    Tutup
-                </button>
-                <button type="button" onclick="scrollToPurchaseSection()"
-                    class="rounded-md bg-black px-4 py-2 text-xs font-medium text-white hover:bg-gray-800 transition cursor-pointer">
-                    Pesan Produk Ini
-                </button>
+            <!-- Daftar Semua Rating Produk -->
+            <div id="all-ratings-modal-list" class="p-6 overflow-y-auto divide-y divide-gray-100 space-y-4">
+                <!-- Dirender dinamis lewat JS -->
             </div>
         </div>
     </div>
@@ -400,14 +393,6 @@
         function renderReviewOrderStatusNote() {
             const noteEl = document.getElementById('review-order-status-note');
             if (!noteEl) return;
-
-            if (!hasOrderedProduct) {
-                noteEl.textContent = 'Belum pernah dipesan — pesan produk ini dulu untuk beri rating.';
-                noteEl.className = 'text-[11px] text-amber-700 leading-relaxed';
-            } else {
-                noteEl.textContent = 'Sudah pernah dipesan — kamu bisa beri rating (1x per item).';
-                noteEl.className = 'text-[11px] text-emerald-700 leading-relaxed';
-            }
         }
 
         function handleWriteReviewClick() {
@@ -645,6 +630,97 @@
             }
         };
 
+        // Rating Per Produk (Bintang 5 sampai Bintang 1)
+        const productRatingsData = {
+            "Baby Tee Bang Windah": [{
+                    nama: "Rizky Pratama",
+                    waktu: "2 days ago",
+                    rating: 5,
+                    teks: "Bahan kaosnya tebel tapi adem banget dipake seharian, sablonannya juga rapi parah!"
+                },
+                {
+                    nama: "Dinda Kirana",
+                    waktu: "1 week ago",
+                    rating: 5,
+                    teks: "Pengiriman cepet banget, ukuran M pas di badan, warnanya cakep ga luntur pas dicuci."
+                },
+                {
+                    nama: "Siti Rahma",
+                    waktu: "5 days ago",
+                    rating: 4,
+                    teks: "Kualitas sablon mantap, cuma kemarin sempat agak lama di kurir pengiriman."
+                },
+                {
+                    nama: "Bayu Saputra",
+                    waktu: "2 weeks ago",
+                    rating: 3,
+                    teks: "Bahannya lumayan oke, tapi cutting-an agak ngepas di bagian ketiak."
+                },
+                {
+                    nama: "Aldi Mahendra",
+                    waktu: "3 weeks ago",
+                    rating: 2,
+                    teks: "Sablon aman, tapi paket dateng agak telat dari estimasi."
+                },
+                {
+                    nama: "Nadia Putri",
+                    waktu: "1 month ago",
+                    rating: 1,
+                    teks: "Kurang cocok sama ukurannya, kekecilan buat gue."
+                }
+            ],
+            "Baby Tee Radio Head": [{
+                    nama: "Fajar Nugraha",
+                    waktu: "3 days ago",
+                    rating: 5,
+                    teks: "Desainnya keren parah, warna hitamnya pekat dan nyaman dipakai nongkrong."
+                },
+                {
+                    nama: "Gilang Ramadhan",
+                    waktu: "6 days ago",
+                    rating: 4,
+                    teks: "Bahan adem, jahitan rapi, pengiriman standar aman."
+                },
+                {
+                    nama: "Kevin Pratama",
+                    waktu: "2 weeks ago",
+                    rating: 3,
+                    teks: "Cukup bagus buat harga segini, tinggal nunggu restock ukuran L."
+                },
+                {
+                    nama: "Rani Kusuma",
+                    waktu: "3 weeks ago",
+                    rating: 1,
+                    teks: "Salah pilih ukuran pas checkout, agak kecewa di sizing."
+                }
+            ],
+            "Baby Tee Snoopy": [{
+                    nama: "Ayu Lestari",
+                    waktu: "1 day ago",
+                    rating: 5,
+                    teks: "Lucu banget modelnya, warna putihnya nggak nerawang dan enak dipakai."
+                },
+                {
+                    nama: "Tari Wulandari",
+                    waktu: "4 days ago",
+                    rating: 5,
+                    teks: "Bintang 5 pokoknya, detail gambarnya tajam banget."
+                },
+                {
+                    nama: "Dimas Adit",
+                    waktu: "1 week ago",
+                    rating: 4,
+                    teks: "Mantap, cuma packing plastik luarnya agak penyok dikit."
+                },
+                {
+                    nama: "Yoga Pratama",
+                    waktu: "2 weeks ago",
+                    rating: 2,
+                    teks: "Agak tipis menurut gue dibanding varian lain."
+                }
+            ]
+        };
+
         let selectedColor = 'Black';
         let selectedSize = null;
         let quantity = 1;
@@ -652,6 +728,7 @@
         let scrollPosition = 0;
         let recentSearches = ['Long Sleeve', 'Baby Tee', 'Baby Tee Bang Windah'];
         let productNameCurrent = "{{ $product['nama'] }}";
+        let activeStarFilter = 'all';
 
         // PENGAMAN JUDUL & STOK DINAMIS (Ubah Regular Tee jadi Short Sleeve otomatis)
         document.addEventListener('DOMContentLoaded', () => {
@@ -665,6 +742,11 @@
                 }
             }
 
+            const modalTitle = document.getElementById('modal-ratings-title');
+            if (modalTitle) {
+                modalTitle.innerText = `Semua Rating & Ulasan — ${productNameCurrent}`;
+            }
+
             renderReviewOrderStatusNote();
             updateCartCountUI();
             renderSizeOptions();
@@ -672,6 +754,12 @@
             generateRandomContent();
             renderRecentSearches();
             renderSuggestions('');
+
+            document.getElementById('all-ratings-modal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'all-ratings-modal') {
+                    closeAllRatingsModal();
+                }
+            });
 
             const desktopInput = document.getElementById('search-input');
             const mobileInput = document.getElementById('search-input-mobile');
@@ -714,37 +802,174 @@
             };
         }
 
-        const poolReviews = [{
-                nama: "Rizky Pratama",
-                waktu: "2 days ago",
-                bintang: "★★★★★",
-                teks: "Bahan kaosnya tebel tapi adem banget dipake seharian, sablonannya juga rapi parah!"
-            },
-            {
-                nama: "Dinda Kirana",
-                waktu: "1 week ago",
-                bintang: "★★★★★",
-                teks: "Pengiriman cepet banget, ukuran M pas di badan, warnanya cakep ga luntur pas dicuci."
-            },
-            {
-                nama: "Fajar Nugraha",
-                waktu: "3 days ago",
-                bintang: "★★★★★",
-                teks: "Mantap jiwa, cutting-an streetwear-nya pas banget di badan. Bakal order warna putihnya juga nih."
-            },
-            {
-                nama: "Siti Rahma",
-                waktu: "5 days ago",
-                bintang: "★★★★☆",
-                teks: "Kualitas sablon mantap, cuma kemarin sempat agak lama di kurir pengiriman."
-            },
-            {
-                nama: "Gilang Ramadhan",
-                waktu: "2 weeks ago",
-                bintang: "★★★★★",
-                teks: "Gokil sih merch-nya Bang Windah, bahan cotton combed-nya beneran premium."
+        function getReviewsForCurrentProduct() {
+            const cleanName = productNameCurrent.trim().toLowerCase();
+            for (const key in productRatingsData) {
+                if (cleanName === key.toLowerCase() || cleanName.includes(key.toLowerCase()) || key.toLowerCase().includes(
+                        cleanName)) {
+                    return [...productRatingsData[key]].sort((a, b) => b.rating - a.rating);
+                }
             }
-        ];
+
+            // Fallback unik per produk jika belum terdaftar eksplisit di productRatingsData
+            const baseReviews = [{
+                    nama: "Rizky Pratama",
+                    waktu: "2 days ago",
+                    rating: 5,
+                    teks: "Bahan kaosnya tebel tapi adem banget dipake seharian, sablonannya juga rapi parah!"
+                },
+                {
+                    nama: "Dinda Kirana",
+                    waktu: "1 week ago",
+                    rating: 5,
+                    teks: "Pengiriman cepet banget, ukuran M pas di badan, warnanya cakep ga luntur pas dicuci."
+                },
+                {
+                    nama: "Siti Rahma",
+                    waktu: "5 days ago",
+                    rating: 4,
+                    teks: "Kualitas sablon mantap, cuma kemarin sempat agak lama di kurir pengiriman."
+                },
+                {
+                    nama: "Fajar Nugraha",
+                    waktu: "3 days ago",
+                    rating: 3,
+                    teks: "Cutting-an streetwear-nya pas, bahan nyaman buat harian."
+                },
+                {
+                    nama: "Gilang Ramadhan",
+                    waktu: "2 weeks ago",
+                    rating: 2,
+                    teks: "Pengiriman agak lama dari perkiraan, tapi barang sesuai."
+                },
+                {
+                    nama: "Bagas Aditya",
+                    waktu: "3 weeks ago",
+                    rating: 1,
+                    teks: "Kurang pas di bagian ukuran buat gue."
+                }
+            ];
+
+            const offset = Math.abs(productNameCurrent.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)) %
+                baseReviews.length;
+            const rotated = [...baseReviews.slice(offset), ...baseReviews.slice(0, offset)];
+            return rotated.sort((a, b) => b.rating - a.rating);
+        }
+
+        function formatStars(rating) {
+            const score = Math.max(1, Math.min(5, parseInt(rating, 10) || 5));
+            return '★'.repeat(score) + '☆'.repeat(5 - score);
+        }
+
+        function openAllRatingsModal() {
+            const modal = document.getElementById('all-ratings-modal');
+            if (!modal) return;
+            activeStarFilter = 'all';
+            renderStarFilterButtons();
+            renderModalRatingsList();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAllRatingsModal() {
+            const modal = document.getElementById('all-ratings-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectStarFilter(starValue) {
+            activeStarFilter = starValue;
+            renderStarFilterButtons();
+            renderModalRatingsList();
+        }
+
+        function renderStarFilterButtons() {
+            const container = document.getElementById('star-filter-container');
+            if (!container) return;
+
+            const reviews = getReviewsForCurrentProduct();
+            const counts = {
+                5: 0,
+                4: 0,
+                3: 0,
+                2: 0,
+                1: 0
+            };
+            reviews.forEach((r) => {
+                const score = Math.max(1, Math.min(5, parseInt(r.rating, 10) || 5));
+                counts[score] = (counts[score] || 0) + 1;
+            });
+
+            const buttons = [{
+                    key: 'all',
+                    label: `Semua (${reviews.length})`
+                },
+                {
+                    key: 5,
+                    label: `5 ★ (${counts[5]})`
+                },
+                {
+                    key: 4,
+                    label: `4 ★ (${counts[4]})`
+                },
+                {
+                    key: 3,
+                    label: `3 ★ (${counts[3]})`
+                },
+                {
+                    key: 2,
+                    label: `2 ★ (${counts[2]})`
+                },
+                {
+                    key: 1,
+                    label: `1 ★ (${counts[1]})`
+                },
+            ];
+
+            container.innerHTML = buttons.map((btn) => {
+                const isActive = String(activeStarFilter) === String(btn.key);
+                const cls = isActive ?
+                    'border-black bg-black text-white' :
+                    'border-gray-300 bg-white text-gray-700 hover:border-black';
+                return `
+                    <button type="button" onclick="selectStarFilter(${typeof btn.key === 'string' ? `'${btn.key}'` : btn.key})"
+                        class="rounded-md border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${cls}">
+                        ${btn.label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderModalRatingsList() {
+            const listContainer = document.getElementById('all-ratings-modal-list');
+            if (!listContainer) return;
+
+            const allReviews = getReviewsForCurrentProduct();
+            const filtered = activeStarFilter === 'all' ?
+                allReviews :
+                allReviews.filter((r) => parseInt(r.rating, 10) === parseInt(activeStarFilter, 10));
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `
+                    <p class="text-xs text-gray-400 text-center py-8">
+                        Belum ada ulasan dengan rating ${activeStarFilter} bintang untuk produk ini.
+                    </p>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map((rev, idx) => `
+                <div class="${idx > 0 ? 'pt-4' : ''} space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-gray-900">${rev.nama}</span>
+                        <span class="text-[11px] text-gray-400">${rev.waktu}</span>
+                    </div>
+                    <div class="text-xs text-black tracking-tight">${formatStars(rev.rating)} <span class="text-[11px] text-gray-500 ml-1">(${rev.rating}/5)</span></div>
+                    <p class="text-xs text-gray-600 leading-relaxed">${rev.teks}</p>
+                </div>
+            `).join('');
+        }
 
         const poolProducts = [{
                 id: 0,
@@ -1096,7 +1321,8 @@
         }
 
         function generateRandomContent() {
-            const shuffledReviews = [...poolReviews].sort(() => 0.5 - Math.random()).slice(0, 2);
+            const productReviews = getReviewsForCurrentProduct();
+            const shuffledReviews = [...productReviews].sort(() => 0.5 - Math.random()).slice(0, 2);
             const reviewContainer = document.getElementById('dynamic-reviews-container');
             if (reviewContainer) {
                 reviewContainer.innerHTML = shuffledReviews.map(rev => `
@@ -1105,7 +1331,7 @@
                             <span class="font-semibold text-gray-900">${rev.nama}</span>
                             <span class="text-[10px] text-gray-400">${rev.waktu}</span>
                         </div>
-                        <div class="text-black text-xs">${rev.bintang}</div>
+                        <div class="text-black text-xs">${formatStars(rev.rating)}</div>
                         <p class="text-xs text-gray-600">${rev.teks}</p>
                     </div>
                 `).join('');

@@ -41,10 +41,9 @@
     {{-- Top Bar Minimalis --}}
     <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur-md">
         <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
-            <a href="{{ url('/product/' . $id) }}"
-                class="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-600 hover:text-neutral-950 transition">
-                <span>&larr;</span>
-                <span>Kembali ke produk</span>
+            <a href="{{ route('profile.orders') }}"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-black transition">
+                ← KEMBALI KE ORDER HISTORY
             </a>
 
             <span class="text-sm font-bold tracking-[0.2em] uppercase text-neutral-950">
@@ -66,7 +65,7 @@
                         Rating &amp; Ulasan Produk
                     </h1>
                     <p class="mt-1.5 text-sm text-neutral-600">
-                        Bagikan pengalaman lo soal bahan, potongan, dan detail produk ini.
+                        Bagikan pengalaman kamu terkait bahan, potongan, dan detail produk ini.
                     </p>
                 </div>
 
@@ -85,12 +84,12 @@
             {{-- Form Kasih Rating --}}
             <div class="lg:col-span-7 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-xs">
                 <div class="flex items-center justify-between gap-2">
-                    <h2 class="text-xl font-bold tracking-tight text-neutral-950">Tulis Ulasan Lu</h2>
+                    <h2 class="text-xl font-bold tracking-tight text-neutral-950">Tulis Ulasan Kamu</h2>
                     <span class="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-medium text-neutral-600">
                         Maks. 1x rating per item
                     </span>
                 </div>
-                <p class="mt-1 text-xs text-neutral-500">Ulasan lo bakal bantu pembeli lain nentuin ukuran &amp;
+                <p class="mt-1 text-xs text-neutral-500">Ulasan kamu sangat membantu pembeli lain nentuin ukuran &amp;
                     pilihan.</p>
 
                 {{-- Detail Pesanan Item (Warna, Ukuran, Qty) --}}
@@ -131,7 +130,7 @@
 
                 <div id="submitToast"
                     class="mt-4 hidden rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800">
-                    Mantap! Rating &amp; ulasan lu udah siap di-preview (belum masuk database ya, tinggal sambungin
+                    Mantap! Rating &amp; ulasan kamu sudah siap di-preview (belum masuk database ya, tinggal sambungin
                     endpoint POST).
                 </div>
 
@@ -162,7 +161,7 @@
                             </div>
                             <span id="ratingBadge"
                                 class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 tabular-nums">
-                                5/5 — Gacor parah!
+                                5/5 — Keren Abis!
                             </span>
                         </div>
                         <input type="hidden" name="rating" id="ratingValue" value="5">
@@ -184,7 +183,7 @@
                             placeholder="Gimana bahan, ukuran, atau kualitas produknya?"
                             class="w-full rounded-xl border border-neutral-300 bg-neutral-50/60 px-3.5 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-950 focus:bg-white focus:outline-none transition disabled:opacity-60 disabled:cursor-not-allowed"></textarea>
                         <p id="commentError" class="mt-1.5 hidden text-xs font-medium text-red-600">
-                            Isi ulasan lo dulu sebelum dikirim.
+                            Isi ulasan kamu dulu sebelum dikirim.
                         </p>
                     </div>
 
@@ -231,7 +230,7 @@
                 </div>
 
                 <div class="mt-6 rounded-xl bg-neutral-100 p-4 text-xs text-neutral-600 leading-relaxed">
-                    Tips: Kasih info tinggi/berat badan atau <em>size</em> yang lo pakai biar pembeli lain gampang
+                    Tips: Kasih info tinggi/berat badan atau <em>size</em> yang kamu pakai biar pembeli lain gampang
                     nentuin <em>fit</em> bajunya.
                 </div>
             </div>
@@ -364,7 +363,7 @@
             2: '2/5 — Lumayan',
             3: '3/5 — Standar',
             4: '4/5 — Mantap',
-            5: '5/5 — Gacor parah!',
+            5: '5/5 — Keren Abis!',
         };
 
         let selectedRating = 5;

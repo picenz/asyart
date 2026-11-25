@@ -14,7 +14,7 @@
     <!-- Container Utama Split Screen -->
     <div class="flex flex-col lg:flex-row min-h-screen">
 
-        <!-- 1. BAGIAN KRI: BANNER GAMBAR & MENU NAVIGASI AKUN -->
+        <!-- 1. BAGIAN KIRI: BANNER GAMBAR & MENU NAVIGASI AKUN -->
         <div class="w-full lg:w-1/2 h-auto relative bg-cover bg-center p-6 lg:p-12 flex flex-col justify-between shrink-0 lg:sticky lg:top-0 lg:max-h-screen"
             style="background-image: url('{{ asset('images/login.jpg') }}');">
 
@@ -91,21 +91,56 @@
                     // Masukkan order_id yang sudah pernah diberi rating ke array di bawah
                     // =====================================================================
                     $ratedOrderIds = $ratedOrderIds ?? [];
+
+                    // Mode test cepat di browser: tambahkan ?test_rating=1 di URL
+                    // untuk simulasi order pertama completed + rated, order kedua completed + belum rated
+                    $isTestMode = app()->environment(['local', 'testing']) && request()->boolean('test_rating');
                 @endphp
 
                 <!-- LIST ORDERS -->
                 <div class="space-y-6">
-                    @forelse($orders as $order)
+                    @forelse($orders as $index => $order)
                         @php
                             $statusText = $order->status ?? 'Processing';
                             $isFinishedOrder = in_array(strtolower($statusText), ['completed', 'delivered', 'selesai']);
+
                             $isAlreadyRated =
-                                in_array($order->id, $ratedOrderIds) || (bool) ($order->is_rated ?? false);
+                                in_array($order->id, $ratedOrderIds) ||
+                                (bool) ($order->is_rated ?? false) ||
+                                !empty($order->rating) ||
+                                !empty($order->review);
+
+                            // Simulasi cepat buat ngetes tampilan tanpa ubah DB dulu
+                            if ($isTestMode) {
+                                if ($index === 0) {
+                                    $statusText = 'Completed';
+                                    $isFinishedOrder = true;
+                                    $isAlreadyRated = true;
+                                } elseif ($index === 1) {
+                                    $statusText = 'Completed';
+                                    $isFinishedOrder = true;
+                                    $isAlreadyRated = false;
+                                }
+                            }
 
                             // Ambil product_id pertama dari items_json jika ada, fallback ke 0
                             $decodedItems = json_decode($order->items_json ?? '[]', true);
                             $targetProductId =
                                 $order->product_id ?? ($decodedItems[0]['id'] ?? ($decodedItems[0]['product_id'] ?? 0));
+
+                            // URL rating awal (sesuaikan nama route kalau beda)
+                            $createRatingUrl = \Illuminate\Support\Facades\Route::has('product.reviews')
+                                ? route('product.reviews', ['id' => $targetProductId])
+                                : url('/products/' . $targetProductId . '/reviews');
+
+                            // URL halaman edit rating baru (sesuaikan nama route saat sudah dibuat di web.php)
+                            if (\Illuminate\Support\Facades\Route::has('orders.rating.edit')) {
+                                $editRatingUrl = route('orders.rating.edit', ['id' => $order->id]);
+                            } elseif (\Illuminate\Support\Facades\Route::has('profile.orders.rating.edit')) {
+                                $editRatingUrl = route('profile.orders.rating.edit', ['id' => $order->id]);
+                            } else {
+                                $editRatingUrl = url('/profile/orders/' . $order->id . '/rating/edit');
+                            }
                         @endphp
 
                         <!-- Order Card Dinamis -->
@@ -115,7 +150,7 @@
                                     <h4 class="font-bold text-gray-900">Order
                                         #{{ $order->order_number ?? 'RN-' . $order->id }}</h4>
                                     <p class="text-[10px] text-gray-400">Placed
-                                        {{ $order->created_at->format('d M Y') }}</p>
+                                        {{ optional($order->created_at)->format('d M Y') ?? '-' }}</p>
                                 </div>
                                 <span
                                     class="text-[10px] font-semibold px-2.5 py-1 rounded {{ $isFinishedOrder ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
@@ -137,20 +172,25 @@
                                     <a href="{{ route('profile.order.detail', $order->id) }}"
                                         class="hover:underline font-medium text-black">View details →</a>
 
-                                    @if ($isAlreadyRated)
-                                        <span
-                                            class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600">
-                                            Produk sudah diberi rating / ulasan
-                                        </span>
-                                    @elseif ($isFinishedOrder)
-                                        <a href="{{ route('product.reviews', ['id' => $targetProductId]) }}"
-                                            class="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-[11px] font-medium text-white hover:bg-gray-800 transition">
-                                            Rating Pesanan Anda
-                                        </a>
-                                    @else
+                                    {{-- 1. Pesanan belum selesai -> belum bisa rating --}}
+                                    @if (!$isFinishedOrder)
                                         <span class="text-[11px] text-gray-400">
                                             Bisa di-rating setelah pesanan selesai
                                         </span>
+
+                                        {{-- 2. Pesanan sudah selesai & sudah di-rating -> muncul Edit Rating Anda --}}
+                                    @elseif ($isAlreadyRated)
+                                        <a href="{{ $editRatingUrl }}"
+                                            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-800 hover:bg-gray-100 transition">
+                                            Edit Rating Anda
+                                        </a>
+
+                                        {{-- 3. Pesanan sudah selesai & belum di-rating -> tombol Rating Pesanan Anda --}}
+                                    @else
+                                        <a href="{{ $createRatingUrl }}"
+                                            class="inline-flex items-center rounded-md bg-black px-3 py-1.5 text-[11px] font-medium text-white hover:bg-gray-800 transition">
+                                            Rating Pesanan Anda
+                                        </a>
                                     @endif
                                 </div>
 
