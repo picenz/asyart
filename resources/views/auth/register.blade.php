@@ -73,7 +73,7 @@
                         <x-input-error :messages="$errors->get('email')" class="mt-1" />
                     </div>
 
-                    <!-- Password dengan Tombol Mata Interaktif & Keterangan -->
+                    <!-- Password dengan Tombol Mata Interaktif & Checklist Syarat -->
                     <div class="space-y-1">
                         <label for="password" class="block text-xs text-gray-600 font-medium">Password</label>
                         <div class="relative">
@@ -90,9 +90,38 @@
                                 </svg>
                             </button>
                         </div>
-                        <!-- Keterangan / Petunjuk Password -->
-                        <p class="text-[11px] text-gray-400 mt-1">Kata Sandi Anda harus memiliki setidaknya 8 karakter, Kombinasi huruf besar,
-                            Angka, dan Simbol.</p>
+
+                        <!-- Checklist Syarat Password -->
+                        <div class="pt-1.5 text-[11px] text-gray-700">
+                            <p class="mb-1.5 font-medium text-gray-800">Kata sandi Anda harus memiliki setidaknya:</p>
+                            <ul class="space-y-1">
+                                <li class="flex items-center gap-2">
+                                    <span id="dot-length"
+                                        class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0 transition-colors duration-150"></span>
+                                    <span id="text-length" class="text-gray-500 transition-colors duration-150">8
+                                        karakter (maks. 20)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span id="dot-uppercase"
+                                        class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0 transition-colors duration-150"></span>
+                                    <span id="text-uppercase" class="text-gray-500 transition-colors duration-150">1
+                                        huruf kapital</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span id="dot-number"
+                                        class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0 transition-colors duration-150"></span>
+                                    <span id="text-number" class="text-gray-500 transition-colors duration-150">1
+                                        angka</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span id="dot-symbol"
+                                        class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0 transition-colors duration-150"></span>
+                                    <span id="text-symbol" class="text-gray-500 transition-colors duration-150">1
+                                        karakter khusus (Misalnya: # ? ! $ & @)</span>
+                                </li>
+                            </ul>
+                        </div>
+
                         <x-input-error :messages="$errors->get('password')" class="mt-1" />
                     </div>
 
@@ -116,7 +145,13 @@
                                 </svg>
                             </button>
                         </div>
-                        <!-- Error message khusus untuk konfirmasi password -->
+
+                        <!-- Pesan mismatch realtime pas ngetik di bawah Confirm password -->
+                        <p id="confirm-mismatch-msg" class="text-[11px] text-red-600 mt-1 hidden">
+                            The password field confirmation does not match.
+                        </p>
+
+                        <!-- Error message khusus untuk konfirmasi password dari server -->
                         @error('password_confirmation')
                             <span class="text-[11px] text-red-600 mt-1 block">Konfirmasi sandi tidak cocok, pastikan sandi
                                 sama persis cuy.</span>
@@ -167,7 +202,7 @@
 
     </div>
 
-    <!-- SCRIPT TOGGLE IKON MATA PASSWORD -->
+    <!-- SCRIPT TOGGLE IKON MATA PASSWORD & CHECKLIST -->
     <script>
         function togglePassword(fieldId, iconId) {
             const inputField = document.getElementById(fieldId);
@@ -183,6 +218,78 @@
                     `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
             }
         }
+
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('password_confirmation');
+        const mismatchMsg = document.getElementById('confirm-mismatch-msg');
+        let hasTypedPassword = false;
+
+        function setRequirementState(key, isValid) {
+            const dot = document.getElementById(`dot-${key}`);
+            const text = document.getElementById(`text-${key}`);
+
+            dot.classList.remove('bg-gray-300', 'bg-green-500', 'bg-red-500');
+            text.classList.remove('text-gray-500', 'text-green-700', 'text-red-600', 'font-medium');
+
+            if (!hasTypedPassword || passwordInput.value.length === 0) {
+                dot.classList.add('bg-gray-300');
+                text.classList.add('text-gray-500');
+                return;
+            }
+
+            if (isValid) {
+                dot.classList.add('bg-green-500');
+                text.classList.add('text-green-700', 'font-medium');
+            } else {
+                dot.classList.add('bg-red-500');
+                text.classList.add('text-red-600');
+            }
+        }
+
+        function updatePasswordChecklist() {
+            const val = passwordInput.value;
+
+            const checks = {
+                length: val.length >= 8 && val.length <= 20,
+                uppercase: /[A-Z]/.test(val),
+                number: /[0-9]/.test(val),
+                symbol: /[^A-Za-z0-9]/.test(val),
+            };
+
+            Object.entries(checks).forEach(([key, isValid]) => {
+                setRequirementState(key, isValid);
+            });
+        }
+
+        function updateConfirmMismatch() {
+            const passVal = passwordInput.value;
+            const confirmVal = confirmInput.value;
+
+            if (confirmVal.length === 0) {
+                mismatchMsg.classList.add('hidden');
+                confirmInput.classList.remove('border-red-500');
+                confirmInput.classList.add('border-gray-300');
+                return;
+            }
+
+            if (passVal !== confirmVal) {
+                mismatchMsg.classList.remove('hidden');
+                confirmInput.classList.remove('border-gray-300');
+                confirmInput.classList.add('border-red-500');
+            } else {
+                mismatchMsg.classList.add('hidden');
+                confirmInput.classList.remove('border-red-500');
+                confirmInput.classList.add('border-gray-300');
+            }
+        }
+
+        passwordInput.addEventListener('input', () => {
+            hasTypedPassword = true;
+            updatePasswordChecklist();
+            updateConfirmMismatch();
+        });
+
+        confirmInput.addEventListener('input', updateConfirmMismatch);
     </script>
 
 </body>
