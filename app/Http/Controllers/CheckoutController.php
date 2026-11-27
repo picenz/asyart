@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\Orders;
+use Illuminate\Support\Facades\Storage;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -123,8 +124,7 @@ class CheckoutController extends Controller
                 $lockedVariants[] = [$variant, $qty];
             }
 
-            $tax = (int) round($subtotal * 0.11);
-            $total = $subtotal + $shippingCost + $tax;
+            $total = $subtotal + $shippingCost;
 
             $order = Orders::create([
                 'user_id' => $userId,
@@ -169,45 +169,127 @@ class CheckoutController extends Controller
         return redirect()->route('payment');
     }
 
-    public function paymentPage(Request $request)
-    {
-        $orderId = session('asyart_pending_order_id');
+  public function paymentPage(Request $request, $id = null)
+{
+    $orderId = $id ?? session('asyart_pending_order_id');
 
-        abort_unless($orderId, 404);
+    abort_unless($orderId, 404);
 
-$order = Orders::with(['items', 'payment'])            ->where('user_id', $request->user()->id)
-            ->findOrFail($orderId);
+    $order = Orders::with(['items', 'payment'])
+        ->where('user_id', $request->user()->id)
+        ->findOrFail($orderId);
 
-        $subtotal = (float) $order->items->sum('subtotal');
+    $subtotal = (float) $order->items->sum('subtotal');
 
-        $shippingCost = $order->delivery_method === 'Express delivery'
-            ? 20000
-            : 0;
+    $shippingCost = $order->delivery_method === 'Express delivery'
+        ? 20000
+        : 0;
 
-        $total = (float) $order->total_price;
-        $tax = max(0, $total - $subtotal - $shippingCost);
-        $payment = $order->payment;
+    $total = (float) $order->total_price;
+    $tax = max(0, $total - $subtotal - $shippingCost);
+    $payment = $order->payment;
 
-        abort_unless($payment, 404);
+    abort_unless($payment, 404);
 
-        $expiresAt = $payment->expires_at;
-        $isExpired = $payment->status === 'expired'
-            || now()->greaterThanOrEqualTo($expiresAt);
-        return view('payment', compact(
-            'order',
-            'payment',
-            'subtotal',
-            'shippingCost',
-            'tax',
-            'total',
-            'expiresAt',
-            'isExpired'
-        ));
+    $expiresAt = $payment->expires_at;
+
+    $isExpired = $payment->status === 'expired'
+        || (
+            $payment->status !== 'rejected'
+            && $expiresAt
+            && now()->greaterThanOrEqualTo($expiresAt)
+        );
+
+        if (
+    $payment->status === 'pending' &&
+    $payment->expires_at &&
+    now()->greaterThanOrEqualTo($payment->expires_at)
+) {
+    $payment->update([
+        'status' => 'expired',
+    ]);
+}
+
+    return view('payment', compact(
+        'order',
+        'payment',
+        'subtotal',
+        'shippingCost',
+        'tax',
+        'total',
+        'expiresAt',
+        'isExpired'
+    ));
+}
+
+ public function uploadProof(Request $request, $id = null)
+{
+    $request->validate([
+        'proof' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+    ], [
+        'proof.required' => 'Bukti pembayaran wajib diunggah.',
+        'proof.image' => 'File harus berupa gambar.',
+        'proof.mimes' => 'Format bukti harus JPG, JPEG, PNG, atau WEBP.',
+        'proof.max' => 'Ukuran gambar maksimal 5 MB.',
+    ]);
+
+    // Gunakan ID dari URL, atau session untuk checkout lama.
+    $orderId = $id ?? session('asyart_pending_order_id');
+
+    abort_unless($orderId, 404);
+
+    // Pastikan order benar-benar milik customer yang sedang login.
+    $order = Orders::where('user_id', $request->user()->id)
+        ->findOrFail($orderId);
+
+    $payment = Payment::where('order_id', $order->id)
+        ->firstOrFail();
+
+    if (in_array($payment->status, ['paid', 'expired'])) {
+        return back()->with(
+            'error',
+            'Pembayaran sudah diverifikasi atau sudah kedaluwarsa.'
+        );
     }
 
-    /**
-     * Demo only. Ini bukan verifikasi pembayaran QRIS sungguhan.
-     */
+    // Upload ulang setelah ditolak boleh, meskipun batas waktu sebelumnya lewat.
+    if ($payment->status === 'rejected') {
+        $payment->expires_at = now()->addMinutes(15);
+    } else {
+        // Untuk pembayaran pending, batas waktu tetap berlaku.
+        if (
+            !$payment->expires_at ||
+            now()->greaterThanOrEqualTo($payment->expires_at)
+        ) {
+            return back()->with(
+                'error',
+                'Waktu pembayaran sudah berakhir.'
+            );
+        }
+    }
+
+    $oldProof = $payment->proof_path;
+
+    $path = $request->file('proof')
+        ->store('payment-proofs', 'public');
+
+    $payment->update([
+        'proof_path' => $path,
+        'status' => 'pending',
+        'rejection_note' => null,
+        'verified_at' => null,
+        'expires_at' => $payment->expires_at,
+    ]);
+
+    if ($oldProof) {
+        Storage::disk('public')->delete($oldProof);
+    }
+
+    return redirect()
+        ->route('payment.order', $order->id)
+        ->with('success', 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.');
+}
+
     public function demoPaymentSuccess(Request $request)
     {
         $orderId = session('asyart_pending_order_id');

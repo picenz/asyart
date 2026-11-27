@@ -39,36 +39,135 @@
         </div>
 
         <!-- Timeline Status / Tahapan Pesanan -->
+        @php
+            $orderStatus = strtolower($order->status ?? 'pending');
+            $paymentStatus = strtolower($order->payment?->status ?? 'pending');
+
+            $isPaid = $paymentStatus === 'paid' || in_array($orderStatus, ['paid', 'shipped', 'completed']);
+
+            $isShipped = in_array($orderStatus, ['shipped', 'completed']);
+            $isCompleted = $orderStatus === 'completed';
+        @endphp
+
         <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">Timeline Pengiriman</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">
+                Timeline Pesanan
+            </h3>
+
             <div class="space-y-2 text-xs divide-y divide-gray-100">
+
                 <div class="flex items-center justify-between pt-2">
                     <span class="flex items-center gap-2 font-medium text-gray-900">
-                        <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span> Pesanan Dibuat
+                        <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+                        Pesanan Dibuat
                     </span>
-                    <span class="text-[11px] text-gray-400 shrink-0">Selesai</span>
+                    <span class="text-[11px] text-gray-400">Selesai</span>
                 </div>
+
                 <div class="flex items-center justify-between pt-2">
-                    <span class="flex items-center gap-2 font-medium text-gray-900">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0"></span> Diproses Toko
+                    <span class="flex items-center gap-2 font-medium {{ $isPaid ? 'text-gray-900' : 'text-gray-400' }}">
+                        <span
+                            class="w-2 h-2 rounded-full {{ $isPaid ? 'bg-green-500' : 'bg-gray-300' }} shrink-0"></span>
+                        Pembayaran Dikonfirmasi
                     </span>
-                    <span class="text-[11px] text-gray-400 shrink-0">Sedang dikemas</span>
+                    <span class="text-[11px] text-gray-400">
+                        {{ $isPaid ? $order->payment?->paid_at?->format('d M Y, H:i') ?? 'Selesai' : 'Menunggu pembayaran' }}
+                    </span>
                 </div>
+
                 <div class="flex items-center justify-between pt-2">
-                    <span class="flex items-center gap-2 font-medium text-gray-400">
-                        <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0"></span> Dalam Pengiriman
+                    <span class="flex items-center gap-2 font-medium {{ $isPaid ? 'text-gray-900' : 'text-gray-400' }}">
+                        <span
+                            class="w-2 h-2 rounded-full {{ $isPaid ? 'bg-green-500' : 'bg-gray-300' }} shrink-0"></span>
+                        Diproses Toko
                     </span>
-                    <span class="text-[11px] text-gray-400 shrink-0">Menunggu kurir</span>
+                    <span class="text-[11px] text-gray-400">
+                        {{ $isShipped ? 'Selesai' : ($isPaid ? 'Sedang diproses' : 'Menunggu pembayaran') }}
+                    </span>
                 </div>
+
                 <div class="flex items-center justify-between pt-2">
-                    <span class="flex items-center gap-2 font-medium text-gray-400">
-                        <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0"></span> Selesai
+                    <span
+                        class="flex items-center gap-2 font-medium {{ $isShipped ? 'text-gray-900' : 'text-gray-400' }}">
+                        <span
+                            class="w-2 h-2 rounded-full {{ $isShipped ? 'bg-green-500' : 'bg-gray-300' }} shrink-0"></span>
+                        Dalam Pengiriman
                     </span>
-                    <span class="text-[11px] text-gray-400 shrink-0">-</span>
+                    <span class="text-[11px] text-gray-400">
+                        {{ $isShipped ? $order->shipped_at?->format('d M Y, H:i') ?? 'Dikirim' : 'Menunggu kurir' }}
+                    </span>
                 </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <span
+                        class="flex items-center gap-2 font-medium {{ $isCompleted ? 'text-gray-900' : 'text-gray-400' }}">
+                        <span
+                            class="w-2 h-2 rounded-full {{ $isCompleted ? 'bg-green-500' : 'bg-gray-300' }} shrink-0"></span>
+                        Selesai
+                    </span>
+                    <span class="text-[11px] text-gray-400">
+                        {{ $isCompleted ? 'Pesanan selesai' : 'Belum selesai' }}
+                    </span>
+                </div>
+
             </div>
         </div>
 
+        <!-- Informasi Pembayaran -->
+        <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm text-xs">
+            <h3 class="font-bold uppercase tracking-wider text-gray-900">
+                Informasi Pembayaran
+            </h3>
+
+
+
+            @if ($paymentStatus === 'rejected')
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
+                    <p class="font-bold text-red-700">Pembayaran Ditolak</p>
+
+                    <p class="text-red-600">
+                        Bukti pembayaran kamu belum dapat diverifikasi.
+                    </p>
+
+                    @if ($order->payment?->rejection_note)
+                        <p class="text-gray-700">
+                            <strong>Alasan:</strong>
+                            {{ $order->payment->rejection_note }}
+                        </p>
+                    @endif
+
+                    <p class="text-gray-600">
+                        Silakan kembali ke halaman pembayaran untuk mengunggah bukti pembayaran yang baru.
+                    </p>
+                </div>
+
+                <a href="{{ route('payment.order', $order->id) }}"
+                    class="inline-flex items-center justify-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition">
+                    Upload Ulang Bukti Pembayaran
+                </a>
+            @elseif ($paymentStatus === 'paid')
+                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p class="font-bold text-green-700">Pembayaran Berhasil Diverifikasi</p>
+                    <p class="text-gray-600 mt-1">
+                        {{ $order->payment?->paid_at?->format('d M Y, H:i') ?? '-' }} WIB
+                    </p>
+                </div>
+            @elseif ($paymentStatus === 'expired')
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <p class="font-bold text-gray-700">Pembayaran Kedaluwarsa</p>
+                    <p class="text-gray-600 mt-1">
+                        Waktu pembayaran telah berakhir.
+                    </p>
+                </div>
+            @else
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p class="font-bold text-amber-700">Menunggu Verifikasi Pembayaran</p>
+                    <p class="text-gray-600 mt-1">
+                        Pembayaran kamu sedang menunggu pemeriksaan admin.
+                    </p>
+                </div>
+            @endif
+        </div>
         <!-- Informasi Penerima & Alamat (Struk Data) -->
         <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm text-xs">
             <h3 class="font-bold uppercase tracking-wider text-gray-900">Informasi Pengiriman</h3>
@@ -81,8 +180,23 @@
                 <span class="font-medium text-gray-900 sm:text-right break-all">{{ $order->email }} /
                     {{ $order->phone }}</span>
 
-                <span class="text-gray-400">Kurir / Layanan</span>
-                <span class="font-medium text-gray-900 sm:text-right">{{ $order->delivery_method }}</span>
+                <span class="text-gray-400">Metode Pengiriman</span> <span
+                    class="font-medium text-gray-900 sm:text-right">{{ $order->delivery_method }}</span>
+
+                <span class="text-gray-400">Kurir</span>
+                <span class="font-medium text-gray-900 sm:text-right">
+                    {{ $order->courier ?? 'Belum ditentukan' }}
+                </span>
+
+                <span class="text-gray-400">Nomor Resi</span>
+                <span class="font-medium text-gray-900 sm:text-right break-all">
+                    {{ $order->tracking_number ?? 'Belum tersedia' }}
+                </span>
+
+                <span class="text-gray-400">Tanggal Dikirim</span>
+                <span class="font-medium text-gray-900 sm:text-right">
+                    {{ $order->shipped_at?->format('d M Y, H:i') ?? '-' }}
+                </span>
 
                 <span class="text-gray-400">Alamat Lengkap</span>
                 <span class="font-medium text-gray-900 sm:text-right leading-relaxed">{{ $order->address }},
@@ -91,57 +205,51 @@
         </div>
 
         <!-- Rincian Item Pesanan -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">Isi Pesanan</h3>
 
-            <div class="space-y-3 divide-y divide-gray-100">
+@php
+    $subtotalProduk = $order->items->sum('subtotal');
+    $ongkir = strtolower($order->delivery_method) === 'express delivery' ? 20000 : 0;
+@endphp
+
+<div class="space-y-3 divide-y divide-gray-100">
+    @forelse ($order->items as $item)
+        <div class="flex items-center justify-between gap-3 pt-3 first:pt-0 text-xs">
+            <div class="flex items-center gap-3 min-w-0">
                 @php
-                    $items = json_decode($order->items_json ?? '[]', true);
-                    $subtotalProduk = 0;
-                    foreach ($items as $item) {
-                        $subtotalProduk += (int) preg_replace('/[^0-9]/', '', $item['harga']) * ($item['qty'] ?? 1);
-                    }
-                    // Deteksi ongkir otomatis berdasarkan metode pengiriman
-                    $ongkir = strtolower($order->delivery_method) === 'express delivery' ? 20000 : 0;
+                    $image = $item->product?->images->first();
                 @endphp
 
-                @foreach ($items as $item)
-                    <div class="flex items-center justify-between gap-3 pt-3 first:pt-0 text-xs">
-                        <div class="flex items-center gap-3 min-w-0">
-                            @if (isset($item['gambar']))
-                                <img src="{{ $item['gambar'] }}"
-                                    class="w-12 h-12 object-cover rounded border border-gray-200 shrink-0 bg-gray-50">
-                            @endif
-                            <div class="min-w-0">
-                                <p class="font-semibold text-gray-900 truncate">{{ $item['nama'] ?? 'Produk' }}</p>
-                                <p class="text-[10px] text-gray-400 truncate">Color: {{ $item['warna'] ?? '-' }} |
-                                    Size: {{ $item['ukuran'] ?? '-' }} | Qty: {{ $item['qty'] ?? 1 }}</p>
-                            </div>
-                        </div>
-                        <span class="font-semibold text-gray-900 shrink-0">{{ $item['harga'] ?? 'Rp0' }}</span>
-                    </div>
-                @endforeach
-            </div>
+                @if ($image)
+                    <img src="{{ asset($image->image_path) }}"
+                        alt="{{ $item->product_name }}"
+                        class="w-12 h-12 object-cover rounded border border-gray-200 shrink-0 bg-gray-50">
+                @else
+                    <div class="w-12 h-12 bg-gray-100 rounded border border-gray-200 shrink-0"></div>
+                @endif
 
-            <!-- Total Harga & Ongkir Sinkron (Responsive & Rapi) -->
-            <div class="border-t border-gray-200 pt-4 space-y-2 text-xs">
-                <div class="flex justify-between text-gray-500">
-                    <span>Subtotal / Produk</span>
-                    <span class="font-medium text-gray-900">Rp{{ number_format($subtotalProduk, 0, ',', '.') }}</span>
-                </div>
-                <div class="flex justify-between text-gray-500">
-                    <span>Ongkos Kirim ({{ $order->delivery_method }})</span>
-                    <span class="font-medium text-gray-900">Rp{{ number_format($ongkir, 0, ',', '.') }}</span>
-                </div>
-                <div
-                    class="flex justify-between items-center pt-3 border-t border-gray-100 text-sm font-bold text-gray-900 bg-amber-50 p-3.5 rounded-xl border border-amber-200 shadow-sm mt-3 w-full">
-                    <span class="tracking-wider">TOTAL PEMBAYARAN</span>
-                    <span
-                        class="text-amber-700 text-base sm:text-lg font-extrabold">Rp{{ number_format($order->total_price, 0, ',', '.') }}</span>
+                <div class="min-w-0">
+                    <p class="font-semibold text-gray-900 truncate">
+                        {{ $item->product_name }}
+                    </p>
+                    <p class="text-[10px] text-gray-400">
+                        Color: {{ $item->color ?? '-' }} |
+                        Size: {{ $item->size ?? '-' }} |
+                        Qty: {{ $item->quantity }}
+                    </p>
                 </div>
             </div>
 
-    </main>
+            <span class="font-semibold text-gray-900 shrink-0">
+                Rp{{ number_format($item->subtotal, 0, ',', '.') }}
+            </span>
+        </div>
+    @empty
+        <p class="text-xs text-gray-500 py-3">
+            Tidak ada item dalam pesanan ini.
+        </p>
+    @endforelse
+</div>
+
 
     <!-- FOOTER -->
     <footer class="py-6 text-center text-[11px] text-gray-400 border-t border-gray-200 bg-white">

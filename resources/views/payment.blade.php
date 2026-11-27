@@ -48,8 +48,9 @@
                         class="text-gray-400 font-normal">|ASY-{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h1 class="text-3xl font-serif font-medium">Scan to pay with QRIS</h1>
-                <p class="text-xs text-gray-500">Use any e-wallet or mobile banking app. The amount is filled in
-                    automatically.</p>
+                <p class="text-xs text-gray-500">
+    Scan the QRIS code using your preferred e-wallet or mobile banking app, then pay the exact amount shown.
+</p>
             </div>
 
             <!-- Card Utama QRIS -->
@@ -94,54 +95,151 @@
 
                 <!-- Tombol Aksi QRIS -->
                 <div class="space-y-3 pt-2">
-                    <button type="button" data-payment-action
-                        onclick="alert('Pembayaran belum dapat diverifikasi otomatis. Pesanan masih berstatus pending.')"
-                        class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
-                        Check payment status
-                    </button>
+                  <a href="{{ route('profile.order.detail', $order->id) }}"
+    class="block w-full bg-black text-white text-center py-3.5 rounded text-xs font-medium hover:bg-gray-800 transition active:scale-95 shadow-md">
+    Check payment status
+</a>
 
-                    <button type="button" data-payment-action onclick="alert('QR code demo belum dapat diunduh.')"
-                        class="w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
+                    <a href="{{ asset('images/qris.jpg') }}" download="ASYART-MERCH-QRIS.jpg" data-payment-action
+                        class="block w-full border border-gray-300 bg-white text-gray-800 text-center py-3 rounded text-xs font-medium hover:bg-gray-50 transition">
                         Download QR code
-                    </button>
+                    </a>
                 </div>
 
-                <p class="text-[10px] text-gray-400 text-center">
-                    Payment status is pending until verified by the payment gateway.
-                </p>
+                {{-- UPLOAD BUKTI PEMBAYARAN --}}
+<div class="border-t border-gray-200 pt-4 space-y-3">
+
+    <h3 class="text-xs font-bold uppercase tracking-wider">
+        Upload Payment Proof
+    </h3>
+
+    @if (session('success'))
+        <p class="text-xs text-green-600">
+            {{ session('success') }}
+        </p>
+    @endif
+
+    @if (session('error'))
+        <p class="text-xs text-red-600">
+            {{ session('error') }}
+        </p>
+    @endif
+
+    @if ($errors->has('proof'))
+        <p class="text-xs text-red-600">
+            {{ $errors->first('proof') }}
+        </p>
+    @endif
+
+    @if ($payment->proof_path)
+        <p class="text-xs text-green-600">
+            Bukti pembayaran sudah diunggah. Menunggu verifikasi admin.
+        </p>
+    @endif
+
+    @if (!$isExpired && $payment->status !== 'paid')
+        <form action="{{ route('payment.upload-proof.order', $order->id) }}"
+            method="POST"
+            enctype="multipart/form-data"
+            class="space-y-3">
+
+            @csrf
+
+            <input type="file"
+                name="proof"
+                accept=".jpg,.jpeg,.png,.webp"
+                required
+                class="block w-full text-xs text-gray-600 border border-gray-300 rounded-lg p-3">
+
+            <p class="text-[10px] text-gray-400">
+                Format JPG, JPEG, PNG, atau WEBP. Maksimal 5 MB.
+            </p>
+
+            <button type="submit"
+                class="w-full bg-black text-white py-3 rounded text-xs font-medium hover:bg-gray-800 transition">
+                {{ $payment->proof_path ? 'Upload New Proof' : 'Submit Payment Proof' }}
+            </button>
+        </form>
+    @elseif ($payment->status === 'paid')
+        <p class="text-xs text-green-600 font-semibold">
+            Pembayaran sudah diverifikasi.
+        </p>
+    @else
+        <p class="text-xs text-red-600">
+            Waktu pembayaran sudah berakhir.
+        </p>
+    @endif
+</div>
+
+               <p class="text-[10px] text-gray-400 text-center">
+    Your payment will remain pending until the admin verifies your uploaded payment proof.
+</p>
                 <!-- Panduan How to Pay -->
-                <div class="space-y-3 pt-4 border-t border-gray-200">
 
-                    <p class="text-[11px]">Wait for payment verification from the payment gateway.</p>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">How to pay</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
-                        <div class="flex items-start gap-2.5">
-                            <span
-                                class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">1</span>
-                            <p class="text-[11px]">Open any e-wallet or mobile banking app that supports QRIS.</p>
-                        </div>
-                        <div class="flex items-start gap-2.5">
-                            <span
-                                class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">2</span>
-                            <p class="text-[11px]">Choose "Scan QR" and point your camera at the code.</p>
-                        </div>
-                        <div class="flex items-start gap-2.5">
-                            <span
-                                class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">3</span>
-                            <p class="text-[11px]">Check that the merchant is ASYART.MERCH and the amount is correct.
-                            </p>
-                        </div>
-                        <div class="flex items-start gap-2.5">
-                            <span
-                                class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">4</span>
-                            <p class="text-[11px]">Confirm the payment — this page updates automatically.</p>
-                        </div>
-                    </div>
-                    <div class="pt-2">
-                        <a href="#" onclick="alert('Kembali ke metode pembayaran')"
-                            class="text-[11px] text-gray-500 hover:text-black underline">Change payment method</a>
-                    </div>
-                </div>
+{{-- Panduan How to Pay --}}
+<div class="space-y-3 pt-4 border-t border-gray-200">
+
+    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-900">
+        How to Pay
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">1</span>
+            <p class="text-[11px]">
+                Open an e-wallet or mobile banking application that supports QRIS.
+            </p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">2</span>
+            <p class="text-[11px]">
+                Select the QRIS scan feature and scan the QR code displayed on this page.
+            </p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">3</span>
+            <p class="text-[11px]">
+                Check the merchant name and make sure the payment amount matches your order total.
+            </p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">4</span>
+            <p class="text-[11px]">
+                Complete the payment before the payment deadline expires.
+            </p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">5</span>
+            <p class="text-[11px]">
+                Take a screenshot of your successful payment as proof.
+            </p>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-[10px] text-gray-800 flex-shrink-0">6</span>
+            <p class="text-[11px]">
+                Upload your payment proof using the form above and wait for admin verification.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1">
+        <p class="text-[11px] font-bold text-amber-800">
+            Important Notice
+        </p>
+        <p class="text-[11px] text-amber-700">
+            Your order will only be marked as paid after the admin approves your payment proof. If your proof is rejected, check the rejection reason and upload a new proof.
+        </p>
+    </div>
+
+</div>
+
 
             </div>
 
@@ -192,7 +290,7 @@
                     <div class="flex justify-between text-gray-500">
                         <span>PPN (11%)</span>
                         <span class="font-medium text-gray-900">
-                            Rp{{ number_format($tax, 0, ',', '.') }}
+                            Included
                         </span>
                     </div>
 

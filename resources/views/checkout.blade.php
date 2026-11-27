@@ -375,30 +375,28 @@
 
         // Update total checkout dan tombol pembayaran.
 
-        function updateTotalDisplay() {
-            const tax = Math.round(currentSubtotal * 0.11);
-            const grandTotal = currentSubtotal + currentShippingCost + tax;
+       function updateTotalDisplay() {
+    const grandTotal = currentSubtotal + currentShippingCost;
 
-            const formatRupiah = (angka) =>
-                `Rp${angka.toLocaleString('id-ID')}`;
+    const formatRupiah = (angka) =>
+        `Rp${angka.toLocaleString('id-ID')}`;
 
-            const subtotalEl = document.getElementById('summary-subtotal');
-            const shippingEl = document.getElementById('summary-shipping');
-            const totalEl = document.getElementById('summary-total');
-            const btnTotalEl = document.getElementById('btn-total-price');
+    const subtotalEl = document.getElementById('summary-subtotal');
+    const totalEl = document.getElementById('summary-total');
+    const btnTotalEl = document.getElementById('btn-total-price');
 
-            if (subtotalEl) {
-                subtotalEl.innerText = formatRupiah(currentSubtotal);
-            }
+    if (subtotalEl) {
+        subtotalEl.innerText = formatRupiah(currentSubtotal);
+    }
 
-            if (totalEl) {
-                totalEl.innerText = formatRupiah(grandTotal);
-            }
+    if (totalEl) {
+        totalEl.innerText = formatRupiah(grandTotal);
+    }
 
-            if (btnTotalEl) {
-                btnTotalEl.innerText = formatRupiah(grandTotal);
-            }
-        }
+    if (btnTotalEl) {
+        btnTotalEl.innerText = formatRupiah(grandTotal);
+    }
+}
     </script>
 
 </body>

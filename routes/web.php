@@ -85,17 +85,28 @@ Route::middleware('auth')->group(function () {
             ->name('cart.clear');
 
         // Checkout & payment
-        Route::get('/checkout', [CheckoutController::class, 'index'])
-            ->name('checkout');
+     // Checkout & payment
+Route::get('/checkout', [CheckoutController::class, 'index'])
+    ->name('checkout');
 
-        Route::post('/checkout', [CheckoutController::class, 'store'])
-            ->name('checkout.process');
+Route::post('/checkout', [CheckoutController::class, 'store'])
+    ->name('checkout.process');
 
-        Route::get('/payment', [CheckoutController::class, 'paymentPage'])
-            ->name('payment');
+Route::get('/payment', [CheckoutController::class, 'paymentPage'])
+    ->name('payment');
 
-        Route::post('/payment/success', [CheckoutController::class, 'demoPaymentSuccess'])
-            ->name('payment.success');
+// Akses pembayaran berdasarkan ID order
+Route::get('/payment/{id}', [CheckoutController::class, 'paymentPage'])
+    ->name('payment.order');
+
+Route::post('/payment/success', [CheckoutController::class, 'demoPaymentSuccess'])
+    ->name('payment.success');
+
+Route::post('/payment/upload-proof', [CheckoutController::class, 'uploadProof'])
+    ->name('payment.upload-proof');
+
+    Route::post('/payment/{id}/upload-proof', [CheckoutController::class, 'uploadProof'])
+    ->name('payment.upload-proof.order');
 
         // Orders
         Route::get('/orders', [CustomerOrderController::class, 'index'])
@@ -190,11 +201,18 @@ Route::middleware('auth')->group(function () {
             ->name('products.destroy');
 
         // QRIS
-        Route::get('/qris', [QrisController::class, 'index'])
-            ->name('qris.index');
+       // QRIS
+Route::get('/qris', [QrisController::class, 'index'])
+    ->name('qris.index');
 
-        Route::get('/qris/{id}', [QrisController::class, 'show'])
-            ->name('qris.detail');
+Route::get('/qris/{id}', [QrisController::class, 'show'])
+    ->name('qris.detail');
+
+Route::patch('/qris/{id}/approve', [QrisController::class, 'approve'])
+    ->name('qris.approve');
+
+Route::patch('/qris/{id}/reject', [QrisController::class, 'reject'])
+    ->name('qris.reject');
         // Settings & account
         Route::get('/settings', [SettingController::class, 'index'])
             ->name('settings.index');

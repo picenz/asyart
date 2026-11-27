@@ -71,14 +71,43 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders', 'counts'));
     }
 
-   public function show($id)
+public function show($id)
 {
-    $order = Orders::with('items.product', 'items.variant')
-        ->findOrFail($id);
+    $order = Orders::with([
+        'items.product',
+        'items.variant',
+        'payment'
+    ])->findOrFail($id);
+
+    $payment = $order->payment;
+
+    // Update status jika pembayaran sudah expired
+    // dan customer belum mengunggah bukti pembayaran.
+    if (
+        $payment &&
+        $payment->status === 'pending' &&
+        empty($payment->proof_path) &&
+        $payment->expires_at &&
+        now()->greaterThanOrEqualTo($payment->expires_at)
+    ) {
+        $payment->update([
+            'status' => 'expired',
+        ]);
+
+        if (in_array($order->status, ['pending', 'Awaiting payment'])) {
+            $order->update([
+                'status' => 'Expired',
+            ]);
+        }
+    }
 
     $orderItems = $order->items;
 
-    return view('admin.orders.detail', compact('order', 'orderItems'));
+    return view('admin.orders.detail', compact(
+        'order',
+        'orderItems',
+        'payment'
+    ));
 }
 
     public function markAsShipped($id)
@@ -103,15 +132,24 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.detail', $id)->with('success', 'Order marked as completed.');
     }
 
-    public function updateShipment(Request $request, $id)
+
+public function updateShipment(Request $request, $id)
 {
+    $order = Orders::with('payment')->findOrFail($id);
+
+    // Pastikan pembayaran sudah diverifikasi admin
+    if (!$order->payment || $order->payment->status !== 'paid') {
+        return back()->with(
+            'error',
+            'Pesanan belum bisa dikirim karena pembayaran belum diverifikasi.'
+        );
+    }
+
     $validated = $request->validate([
         'courier' => 'required|string|max:100',
         'tracking_number' => 'required|string|max:100',
         'shipped_at' => 'required|date',
     ]);
-
-    $order = Orders::findOrFail($id);
 
     $order->update([
         'courier' => $validated['courier'],
@@ -124,4 +162,5 @@ class OrderController extends Controller
         ->route('admin.orders.detail', $order->id)
         ->with('success', 'Shipment details updated successfully.');
 }
+
 }

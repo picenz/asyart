@@ -345,30 +345,15 @@
 
     <!-- SCRIPT JAVASCRIPT MASTER UTAMA -->
     <script>
-        // Data Stok Dummy (Struktur siap konfigurasi Backend Laravel)
-        const productStockData = {
-            "Black": {
-                "XS": 5,
-                "S": 12,
-                "M": 0,
-                "L": 8,
-                "XL": 3
-            },
-            "White": {
-                "XS": 2,
-                "S": 0,
-                "M": 15,
-                "L": 4,
-                "XL": 10
-            }
-        };
+       // Data varian dan stok langsung dari database Laravel
+const productVariants = @json($product['variants'] ?? []);
 
-        let selectedColor = 'Black';
-        let selectedSize = null;
-        let quantity = 1;
-        let maxStock = 0;
-        let scrollPosition = 0;
-        let recentSearches = ['Long Sleeve', 'Baby tee', 'Baby tee Bang Windah'];
+let selectedColor = 'Black';
+let selectedSize = null;
+let quantity = 1;
+let maxStock = 0;
+let scrollPosition = 0;
+let recentSearches = ['Long Sleeve', 'Baby tee', 'Baby tee Bang Windah'];
 
         // Pool Data Ulasan & Rekomendasi
         const poolReviews = [{
@@ -605,32 +590,64 @@
         }
 
         // Render Size & Stok Berdasarkan Warna Aktif
-        function renderSizeOptions() {
-            const container = document.getElementById('size-buttons-container');
-            const availableSizes = ["XS", "S", "M", "L", "XL"];
-            const colorStock = productStockData[selectedColor] || {};
+     function renderSizeOptions() {
+    const container = document.getElementById('size-buttons-container');
 
-            container.innerHTML = availableSizes.map(size => {
-                const stock = colorStock[size] ?? 0;
-                const isOutOfStock = stock === 0;
-                const isSelected = selectedSize === size;
+    // Ambil ukuran yang tersedia untuk warna terpilih dari database
+    const availableSizes = [...new Set(
+        productVariants
+            .filter(variant =>
+                String(variant.color).toLowerCase() === selectedColor.toLowerCase()
+            )
+            .map(variant => variant.size)
+    )];
 
-                let btnClasses = "size-btn border px-3.5 py-2 text-center text-xs rounded transition font-medium ";
+    // Urutan ukuran standar, ukuran lain tetap ditampilkan setelahnya
+    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL'];
 
-                if (isOutOfStock) {
-                    btnClasses += "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through";
-                } else if (isSelected) {
-                    btnClasses += "border-black bg-black text-white";
-                } else {
-                    btnClasses += "border-gray-200 text-gray-800 hover:border-black cursor-pointer";
-                }
+    availableSizes.sort((a, b) => {
+        const indexA = sizeOrder.indexOf(String(a).toUpperCase());
+        const indexB = sizeOrder.indexOf(String(b).toUpperCase());
 
-                return `
-                    <button type="button" onclick="${isOutOfStock ? '' : `selectSize('${size}')`}"
-                        class="${btnClasses}">${size}</button>
-                `;
-            }).join('');
+        if (indexA === -1 && indexB === -1) return String(a).localeCompare(String(b));
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+
+        return indexA - indexB;
+    });
+
+    if (availableSizes.length === 0) {
+        container.innerHTML = '<span class="text-xs text-gray-400">Ukuran belum tersedia.</span>';
+        return;
+    }
+
+    container.innerHTML = availableSizes.map(size => {
+        const variant = productVariants.find(v =>
+            String(v.color).toLowerCase() === selectedColor.toLowerCase() &&
+            String(v.size).toLowerCase() === String(size).toLowerCase()
+        );
+
+        const stock = Number(variant?.stock ?? 0);
+        const isOutOfStock = stock <= 0;
+        const isSelected = selectedSize === size;
+
+        let btnClasses = "size-btn border px-3.5 py-2 text-center text-xs rounded transition font-medium ";
+
+        if (isOutOfStock) {
+            btnClasses += "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through";
+        } else if (isSelected) {
+            btnClasses += "border-black bg-black text-white";
+        } else {
+            btnClasses += "border-gray-200 text-gray-800 hover:border-black cursor-pointer";
         }
+
+        return `
+            <button type="button"
+                ${isOutOfStock ? 'disabled' : `onclick='selectSize(${JSON.stringify(size)})'`}
+                class="${btnClasses}">${size}</button>
+        `;
+    }).join('');
+}
 
         function selectSize(sizeName) {
             selectedSize = sizeName;
@@ -638,44 +655,56 @@
             updateStockUI();
         }
 
-        function updateStockUI() {
-            const stockStatusText = document.getElementById('stock-status-text');
-            const stockDot = document.getElementById('stock-dot');
-            const addToBagBtn = document.getElementById('add-to-bag-btn');
-            const qtyValEl = document.getElementById('qty-val');
+       function updateStockUI() {
+    const stockStatusText = document.getElementById('stock-status-text');
+    const stockDot = document.getElementById('stock-dot');
+    const addToBagBtn = document.getElementById('add-to-bag-btn');
+    const qtyValEl = document.getElementById('qty-val');
 
-            quantity = 1;
-            qtyValEl.innerText = quantity;
+    quantity = 1;
+    maxStock = 0;
+    qtyValEl.innerText = quantity;
 
-            if (!selectedSize) {
-                stockStatusText.innerText = `Pilih ukuran untuk melihat ketersediaan stok (${selectedColor}).`;
-                stockDot.className = "w-2 h-2 rounded-full bg-yellow-500";
-                addToBagBtn.disabled = true;
-                addToBagBtn.className =
-                    "flex-1 bg-gray-300 text-gray-500 py-3.5 rounded font-medium text-xs transition cursor-not-allowed";
-                addToBagBtn.innerText = "Select Size First";
-                return;
-            }
+    if (!selectedSize) {
+        stockStatusText.innerText =
+            `Pilih ukuran untuk melihat ketersediaan stok (${selectedColor}).`;
 
-            maxStock = productStockData[selectedColor][selectedSize] || 0;
+        stockDot.className = "w-2 h-2 rounded-full bg-yellow-500";
+        addToBagBtn.disabled = true;
+        addToBagBtn.className =
+            "flex-1 bg-gray-300 text-gray-500 py-3.5 rounded font-medium text-xs transition cursor-not-allowed";
+        addToBagBtn.innerText = "Select Size First";
+        return;
+    }
 
-            if (maxStock > 0) {
-                stockStatusText.innerHTML =
-                    `Stok tersedia: <span class="font-semibold text-gray-900">${maxStock} pcs</span> untuk ukuran ${selectedSize} (${selectedColor})`;
-                stockDot.className = "w-2 h-2 rounded-full bg-green-500";
-                addToBagBtn.disabled = false;
-                addToBagBtn.className =
-                    "flex-1 bg-black text-white py-3.5 rounded font-medium text-xs hover:bg-gray-800 active:scale-95 transition cursor-pointer";
-                addToBagBtn.innerText = "Add to Bag";
-            } else {
-                stockStatusText.innerText = `Maaf, stok ukuran ${selectedSize} warna ${selectedColor} habis.`;
-                stockDot.className = "w-2 h-2 rounded-full bg-red-500";
-                addToBagBtn.disabled = true;
-                addToBagBtn.className =
-                    "flex-1 bg-gray-300 text-gray-500 py-3.5 rounded font-medium text-xs transition cursor-not-allowed";
-                addToBagBtn.innerText = "Out of Stock";
-            }
-        }
+    // Cari varian berdasarkan warna dan ukuran dari database
+    const selectedVariant = productVariants.find(variant =>
+        String(variant.color).toLowerCase() === selectedColor.toLowerCase() &&
+        String(variant.size).toLowerCase() === String(selectedSize).toLowerCase()
+    );
+
+    maxStock = Number(selectedVariant?.stock ?? 0);
+
+    if (maxStock > 0) {
+        stockStatusText.innerHTML =
+            `Stok tersedia: <span class="font-semibold text-gray-900">${maxStock} pcs</span> untuk ukuran ${selectedSize} (${selectedColor})`;
+
+        stockDot.className = "w-2 h-2 rounded-full bg-green-500";
+        addToBagBtn.disabled = false;
+        addToBagBtn.className =
+            "flex-1 bg-black text-white py-3.5 rounded font-medium text-xs hover:bg-gray-800 active:scale-95 transition cursor-pointer";
+        addToBagBtn.innerText = "Add to Bag";
+    } else {
+        stockStatusText.innerText =
+            `Maaf, stok ukuran ${selectedSize} warna ${selectedColor} habis.`;
+
+        stockDot.className = "w-2 h-2 rounded-full bg-red-500";
+        addToBagBtn.disabled = true;
+        addToBagBtn.className =
+            "flex-1 bg-gray-300 text-gray-500 py-3.5 rounded font-medium text-xs transition cursor-not-allowed";
+        addToBagBtn.innerText = "Out of Stock";
+    }
+}
 
         // Sinkronisasi Thumbnail & Warna
         function changeImage(imgUrl, colorName, element) {

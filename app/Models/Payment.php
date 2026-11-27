@@ -14,14 +14,18 @@ class Payment extends Model
         'amount',
         'status',
         'gateway_reference',
+        'proof_path',
+        'rejection_note',
         'expires_at',
         'paid_at',
+        'verified_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'expires_at' => 'datetime',
         'paid_at' => 'datetime',
+        'verified_at' => 'datetime',
     ];
 
     public function order(): BelongsTo

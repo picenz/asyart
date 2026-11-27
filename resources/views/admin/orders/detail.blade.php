@@ -12,6 +12,7 @@
                 'paid' => 'Paid',
                 'shipped' => 'Shipped',
                 'completed' => 'Completed',
+                'expired' => 'Expired',
                 default => ucfirst($status),
             };
 
@@ -268,37 +269,65 @@
             </span>
         </div>
 
-        <div class="pt-2 border-t border-gray-100">
-            <button @click="openEditModal = true" type="button"
-                class="text-xs font-semibold text-gray-900 hover:underline">
-                Edit shipment
-            </button>
-        </div>
+        @if ($payment && $payment->status === 'paid')
+    <button @click="openEditModal = true" type="button"
+        class="text-xs font-semibold text-gray-900 hover:underline">
+        Edit shipment
+    </button>
+@else
+    <button type="button" disabled
+        class="text-xs font-semibold text-gray-400 cursor-not-allowed">
+        Edit shipment
+    </button>
+
+    <p class="text-xs text-red-500 mt-2">
+        Shipment can only be edited after payment is verified.
+    </p>
+@endif
     </div>
 </div>
 
-                <!-- Payment Card -->
-                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
-                    <h3 class="text-sm font-bold text-gray-900">Payment</h3>
-                    <div class="text-xs space-y-2">
-                        <div class="flex justify-between text-gray-600">
-                            <span>Method</span>
-                            <span class="font-semibold text-gray-900">Not available</span>
-                        </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Reference</span>
-                            <span class="font-mono text-gray-900">Not available</span>
-                        </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Paid at</span>
-                            <span class="text-gray-900">Not available</span>
-                        </div>
-                        <div class="flex justify-between pt-2 border-t border-gray-100 font-bold text-gray-900">
-                            <span>Amount</span>
-                            <span>Rp{{ number_format($total, 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-                </div>
+               <!-- Payment Card -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
+    <h3 class="text-sm font-bold text-gray-900">Payment</h3>
+
+    <div class="text-xs space-y-2">
+
+        <div class="flex justify-between text-gray-600">
+            <span>Method</span>
+            <span class="font-semibold text-gray-900">
+                {{ $payment?->payment_method ?? 'Not available' }}
+            </span>
+        </div>
+
+        <div class="flex justify-between text-gray-600">
+            <span>Reference</span>
+            <span class="font-mono text-gray-900">
+                {{ $payment?->reference ?? 'Not available' }}
+            </span>
+        </div>
+
+        <div class="flex justify-between text-gray-600">
+            <span>Payment status</span>
+            <span class="font-semibold text-gray-900">
+                {{ ucfirst($payment?->status ?? 'Not available') }}
+            </span>
+        </div>
+
+        <div class="flex justify-between text-gray-600">
+            <span>Paid at</span>
+            <span class="text-gray-900">
+                {{ $payment?->paid_at?->format('d M Y, H:i') ?? 'Not available' }}
+            </span>
+        </div>
+
+        <div class="flex justify-between pt-2 border-t border-gray-100 font-bold text-gray-900">
+            <span>Amount</span>
+            <span>Rp{{ number_format($payment?->amount ?? $total, 0, ',', '.') }}</span>
+        </div>
+
+    </div>
+</div>
             </div>
         </div>
 

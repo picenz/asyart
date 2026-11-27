@@ -64,9 +64,10 @@
                             </svg>
                             Orders
                         </span>
-                        <span
-                            class="px-2 py-0.5 text-xs rounded-full {{ request()->routeIs('admin.orders*') ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-600' }}">6</span>
-                    </a>
+                        <span <span
+                            class="px-2 py-0.5 text-xs rounded-full {{ request()->routeIs('admin.orders*') ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-600' }}">
+                            {{ \App\Models\Orders::count() }}
+                        </span> </a>
 
                     <a href="{{ route('admin.products.index') }}"
                         class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.products*') ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50' }}">

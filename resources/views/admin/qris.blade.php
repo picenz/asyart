@@ -86,7 +86,7 @@
         </a>
     @endforeach
 
-</div>x
+</div>
             <!-- Search & Date Filter Input -->
           <!-- Search & Date Filter Input -->
 <form method="GET" action="{{ route('admin.qris.index') }}"

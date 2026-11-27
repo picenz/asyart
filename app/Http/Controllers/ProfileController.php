@@ -216,12 +216,13 @@ public function setDefaultAddress(Request $request, Address $address): RedirectR
     return redirect()->route('profile.addresses')
         ->with('success', 'Default address updated successfully.');
 }
-    public function orderDetail($id)
-    {
-        $order = Orders::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+  public function orderDetail($id)
+{
+    $order = Orders::with('payment')
+        ->where('id', $id)
+        ->where('user_id', auth()->id())
+        ->firstOrFail();
 
-        return view('profile.order-detail', compact('order'));
-    }
+    return view('profile.order-detail', compact('order'));
+}
 }

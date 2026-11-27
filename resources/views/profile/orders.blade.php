@@ -172,7 +172,13 @@
                                 </div>
 
                             </div>
-
+{{-- Tombol Detail Pesanan --}}
+<div class="flex justify-end pt-2">
+    <a href="{{ route('profile.order.detail', $order->id) }}"
+        class="inline-block text-xs font-semibold text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-900 hover:text-white hover:border-gray-900 transition">
+        Lihat Detail →
+    </a>
+</div>
                         </div>
 
                     @empty

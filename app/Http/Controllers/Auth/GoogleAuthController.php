@@ -48,28 +48,38 @@ class GoogleAuthController extends Controller
                 ]);
         }
 
-        $user = User::where('email', $email)->first();
 
-        if (!$user) {
-            $nameParts = preg_split('/\s+/', trim($googleUser->getName() ?? 'Customer'), 2);
+$user = User::where('email', $email)->first();
 
-            $user = DB::transaction(function () use ($email, $nameParts) {
-                return User::create([
-                    'name' => implode(' ', $nameParts),
-                    'first_name' => $nameParts[0] ?? 'Customer',
-                    'last_name' => $nameParts[1] ?? '',
-                    'email' => $email,
-                    'email_verified_at' => now(),
-                    'password' => bcrypt(Str::random(40)),
-                    'role' => 'customer',
-                ]);
-            });
-      } elseif (!$user->email_verified_at) {
-    return redirect()->route('login')
-        ->withErrors([
-            'email' => 'Akun ASYART ini belum terverifikasi. Login menggunakan metode akun sebelumnya untuk menyelesaikan verifikasi.',
+if (!$user) {
+    $nameParts = preg_split('/\s+/', trim($googleUser->getName() ?? 'Customer'), 2);
+
+    $user = DB::transaction(function () use ($email, $nameParts) {
+        $newUser = User::create([
+            'name' => implode(' ', $nameParts),
+            'first_name' => $nameParts[0] ?? 'Customer',
+            'last_name' => $nameParts[1] ?? '',
+            'email' => $email,
+            'password' => bcrypt(Str::random(40)),
+            'role' => 'customer',
         ]);
+
+        // Pastikan email Google yang sudah terverifikasi
+        // juga tercatat terverifikasi di ASYART.
+        $newUser->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+
+        return $newUser;
+    });
+} elseif (!$user->email_verified_at) {
+    // Akun lama yang emailnya cocok dengan Google
+    // terverifikasi, tandai sebagai verified.
+    $user->forceFill([
+        'email_verified_at' => now(),
+    ])->save();
 }
+
 
         // Jangan pernah menaikkan role berdasarkan data Google.
         if (!in_array($user->role, ['admin', 'customer'], true)) {
